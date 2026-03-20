@@ -524,15 +524,6 @@ func seedProducts(db *gorm.DB) {
             CategoryID:  catMap["Power_supplies"],
         },
         {
-            Name:        "Chieftec Proton 750W",
-            Price:       5990,
-            Image:       "https://c.dns-shop.ru/thumb/st1/fit/320/250/f3ce1de762346f6fae0d3ea40fbecf19/283a9bd96e6e3c0f690022886431fd072bd5749d7f64f0a698d4cccc426e6d4b.jpg",
-            Rating:      4.5,
-            Description: "Блок питания Chieftec Proton 750W 80+ Bronze",
-            Specs:       json.RawMessage(`{"power":"750 W","certificate":"80+ Bronze","modular":"Нет","fan":"140 mm"}`),
-            CategoryID:  catMap["Power_supplies"],
-        },
-        {
             Name:        "SeaSonic Focus PX 850W",
             Price:       14990,
             Image:       "https://c.dns-shop.ru/thumb/st1/fit/320/250/14beb596b34baa16df4c6310c87f2a9c/0b08a7239b479fb92f2d2d41e93b04e5a2b074696e016be5f0069bbbd15cf591.jpg",

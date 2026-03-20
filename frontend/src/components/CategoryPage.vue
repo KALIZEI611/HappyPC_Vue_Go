@@ -149,8 +149,11 @@
               v-for="product in filteredProducts"
               :key="product.id"
               :product="product"
-              :is-in-cart="isInCart(product.id)"
+              :quantity="getQuantity(product.id)"
               @add-to-cart="$emit('add-to-cart', $event)"
+              @update-cart="
+                (productId, newQty) => $emit('update-cart', productId, newQty)
+              "
             />
           </div>
         </section>
@@ -230,6 +233,11 @@ const hasActiveFilters = computed(() => {
     filters.value.minRating > 0
   );
 });
+
+const getQuantity = (productId) => {
+  const item = props.cart.find((i) => i.product.id === productId);
+  return item ? item.quantity : 0;
+};
 
 const filteredProducts = computed(() => {
   let filtered = [...products.value];

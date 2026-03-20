@@ -34,7 +34,6 @@ func main() {
         AllowCredentials: true,
     }))
 
-    // Маршруты
     r.Get("/categories", categoryHandler.GetAll)
     r.Get("/{urlKey}", categoryHandler.GetProductsByURLKey)
     r.Get("/category/{id}/products", categoryHandler.GetCategoryByID)
