@@ -17,13 +17,19 @@
         <span class="rating-value">{{ product.rating }}</span>
       </div>
       <div class="product-price">{{ product.price.toLocaleString() }} ₽</div>
-      <button
-        @click.stop="handleAddToCart"
-        class="add-to-cart"
-        :class="{ 'in-cart': isInCart }"
-      >
-        <i :class="isInCart ? 'fas fa-check' : 'fas fa-cart-plus'"></i>
-        {{ isInCart ? "В корзине" : "Добавить" }}
+
+      <div v-if="quantity > 0" class="quantity-controls" @click.stop>
+        <button @click="decrement" class="qty-btn" :disabled="quantity <= 1">
+          <i class="fas fa-minus"></i>
+        </button>
+        <span class="quantity">{{ quantity }}</span>
+        <button @click="increment" class="qty-btn">
+          <i class="fas fa-plus"></i>
+        </button>
+      </div>
+
+      <button v-else @click.stop="handleAddToCart" class="add-to-cart">
+        <i class="fas fa-cart-plus"></i> Добавить
       </button>
     </div>
   </div>
@@ -34,22 +40,29 @@ import { useRouter } from "vue-router";
 
 const props = defineProps({
   product: { type: Object, required: true },
-  isInCart: { type: Boolean, default: false },
+  quantity: { type: Number, default: 0 },
 });
 
-const emit = defineEmits(["add-to-cart"]);
+const emit = defineEmits(["add-to-cart", "update-cart"]);
 const router = useRouter();
 
 const goToProductPage = () => {
   router.push(`/product/${props.product.id}`);
 };
 
-const handleAddToCart = (event) => {
-  event.stopPropagation();
-  if (props.isInCart) {
-    router.push("/cart");
+const handleAddToCart = () => {
+  emit("add-to-cart", props.product);
+};
+
+const increment = () => {
+  emit("update-cart", props.product.id, props.quantity + 1);
+};
+
+const decrement = () => {
+  if (props.quantity > 1) {
+    emit("update-cart", props.product.id, props.quantity - 1);
   } else {
-    emit("add-to-cart", props.product);
+    emit("update-cart", props.product.id, 0);
   }
 };
 </script>
@@ -64,7 +77,7 @@ const handleAddToCart = (event) => {
   border: 1px solid #e0e0e0;
   display: flex;
   flex-direction: column;
-  cursor: pointer; 
+  cursor: pointer;
 }
 
 .product-card:hover {
@@ -155,6 +168,57 @@ const handleAddToCart = (event) => {
   margin: 4px 0;
 }
 
+.quantity-controls {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #f8f9fa;
+  border-radius: 30px;
+  padding: 8px 12px;
+  border: 1px solid #e0e0e0;
+  width: auto;
+  box-sizing: border-box;
+  margin: 0 auto;
+}
+.qty-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: white;
+  color: #4a90e2;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  font-size: 1rem;
+}
+
+.qty-btn:hover:not(:disabled) {
+  background: #4a90e2;
+  color: white;
+  transform: scale(1.1);
+  box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
+}
+
+.qty-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #f1f1f1;
+  color: #999;
+}
+
+.quantity {
+  font-weight: 600;
+  color: #333;
+  min-width: 30px;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
 .add-to-cart {
   width: 100%;
   padding: 10px;
@@ -173,20 +237,8 @@ const handleAddToCart = (event) => {
   margin-top: 4px;
 }
 
-.add-to-cart.in-cart {
-  background-color: #27ae60;
-}
-
-.add-to-cart.in-cart:hover {
-  background-color: #2ecc71;
-}
-
 .add-to-cart:hover {
   background-color: #2980b9;
-}
-
-.add-to-cart i {
-  font-size: 1rem;
 }
 
 @media (max-width: 768px) {
@@ -204,6 +256,22 @@ const handleAddToCart = (event) => {
 
   .product-price {
     font-size: 1.1rem;
+  }
+
+  .quantity-controls {
+    padding: 6px 10px;
+    gap: 8px;
+  }
+
+  .qty-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 0.8rem;
+  }
+
+  .quantity {
+    min-width: 24px;
+    font-size: 1rem;
   }
 }
 </style>
