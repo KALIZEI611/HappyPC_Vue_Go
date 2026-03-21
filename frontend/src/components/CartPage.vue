@@ -6,31 +6,37 @@
       <div v-if="cart.length === 0" class="empty-cart">
         <i class="fas fa-shopping-cart"></i>
         <p>Корзина пуста</p>
-        <router-link to="/" class="continue-shopping">Продолжить покупки</router-link>
+        <router-link to="/" class="continue-shopping"
+          >Продолжить покупки</router-link
+        >
       </div>
 
       <div v-else class="cart-content">
         <div class="cart-items">
           <div v-for="item in cart" :key="item.product.id" class="cart-item">
-            <router-link :to="'/product/' + item.product.id" class="item-image-link">
+            <router-link
+              :to="'/product/' + item.product.id"
+              class="item-image-link"
+            >
               <div class="item-image">
                 <img :src="item.product.image" :alt="item.product.name" />
               </div>
             </router-link>
 
             <div class="item-info">
-              <router-link :to="'/product/' + item.product.id" class="item-title-link">
+              <router-link
+                :to="'/product/' + item.product.id"
+                class="item-title-link"
+              >
                 <h3>{{ item.product.name }}</h3>
               </router-link>
-              <div class="item-price">{{ item.product.price.toLocaleString() }} ₽</div>
+              <div class="item-price">
+                {{ item.product.price.toLocaleString() }} ₽
+              </div>
             </div>
 
             <div class="quantity-controls">
-              <button
-                @click="decrement(item.product.id)"
-                class="qty-btn"
-                :disabled="item.quantity <= 1"
-              >
+              <button @click="decrement(item.product.id)" class="qty-btn">
                 <i class="fas fa-minus"></i>
               </button>
               <span class="quantity">{{ item.quantity }}</span>
@@ -60,7 +66,9 @@
             <span>{{ totalPrice.toLocaleString() }} ₽</span>
           </div>
           <button class="checkout-btn">Оформить заказ</button>
-          <router-link to="/" class="continue-shopping">Продолжить покупки</router-link>
+          <router-link to="/" class="continue-shopping"
+            >Продолжить покупки</router-link
+          >
         </div>
       </div>
     </div>
@@ -77,11 +85,11 @@ const props = defineProps({
 const emit = defineEmits(["update-cart", "remove-from-cart"]);
 
 const totalItems = computed(() =>
-  props.cart.reduce((sum, item) => sum + item.quantity, 0)
+  props.cart.reduce((sum, item) => sum + item.quantity, 0),
 );
 
 const totalPrice = computed(() =>
-  props.cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
+  props.cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
 );
 
 const increment = (productId) => {
@@ -93,11 +101,7 @@ const decrement = (productId) => {
   const item = props.cart.find((i) => i.product.id === productId);
   if (item) {
     const newQty = item.quantity - 1;
-    if (newQty <= 0) {
-      emit("remove-from-cart", productId);
-    } else {
-      emit("update-cart", productId, newQty);
-    }
+    emit("update-cart", productId, newQty);
   }
 };
 
