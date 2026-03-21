@@ -12,14 +12,19 @@
       </div>
 
       <div v-else-if="filteredProducts.length > 0" class="products-section">
-        <div class="results-info">Найдено {{ filteredProducts.length }} товаров</div>
+        <div class="results-info">
+          Найдено {{ filteredProducts.length }} товаров
+        </div>
         <div class="products-grid">
           <ProductCard
             v-for="product in filteredProducts"
             :key="product.id"
             :product="product"
-            :is-in-cart="isInCart(product.id)"
+            :quantity="getQuantity(product.id)"
             @add-to-cart="$emit('add-to-cart', $event)"
+            @update-cart="
+              (productId, newQty) => $emit('update-cart', productId, newQty)
+            "
           />
         </div>
       </div>
@@ -65,12 +70,13 @@ const filteredProducts = computed(() => {
   if (!props.searchQuery) return [];
   const query = props.searchQuery.toLowerCase().trim();
   return allProducts.value.filter((product) =>
-    product.name.toLowerCase().includes(query)
+    product.name.toLowerCase().includes(query),
   );
 });
 
-const isInCart = (productId) => {
-  return props.cart.some((item) => item.product.id === productId);
+const getQuantity = (productId) => {
+  const cartItem = props.cart.find((item) => item.product.id === productId);
+  return cartItem ? cartItem.quantity : 0;
 };
 
 onMounted(() => {

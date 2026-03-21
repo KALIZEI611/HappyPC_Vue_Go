@@ -1,4 +1,3 @@
-# Этап сборки статики
 FROM node:20-alpine AS builder
 
 WORKDIR /app
@@ -9,13 +8,13 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-# Этап раздачи статики через nginx
 FROM nginx:alpine
 
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Копируем кастомный конфиг Nginx
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Если нужен кастомный конфиг nginx (например, для прокси), можно добавить:
-# COPY nginx.conf /etc/nginx/nginx.conf
+# Копируем собранный проект
+COPY --from=builder /app/dist /usr/share/nginx/html
 
 EXPOSE 80
 

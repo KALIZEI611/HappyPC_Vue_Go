@@ -1,5 +1,5 @@
 <template>
-  <div class="product-card" @click="goToProductPage">
+  <div v-if="product" class="product-card" @click="goToProductPage">
     <div class="product-image-container">
       <div class="product-image">
         <img :src="product.image" :alt="product.name" loading="lazy" />
@@ -19,7 +19,7 @@
       <div class="product-price">{{ product.price.toLocaleString() }} ₽</div>
 
       <div v-if="quantity > 0" class="quantity-controls" @click.stop>
-        <button @click="decrement" class="qty-btn" :disabled="quantity <= 1">
+        <button @click="decrement" class="qty-btn">
           <i class="fas fa-minus"></i>
         </button>
         <span class="quantity">{{ quantity }}</span>
@@ -33,6 +33,7 @@
       </button>
     </div>
   </div>
+  <div v-else class="product-card error">Товар временно недоступен</div>
 </template>
 
 <script setup>
@@ -47,7 +48,7 @@ const emit = defineEmits(["add-to-cart", "update-cart"]);
 const router = useRouter();
 
 const goToProductPage = () => {
-  router.push(`/product/${props.product.id}`);
+  if (props.product) router.push(`/product/${props.product.id}`);
 };
 
 const handleAddToCart = () => {
@@ -55,14 +56,17 @@ const handleAddToCart = () => {
 };
 
 const increment = () => {
-  emit("update-cart", props.product.id, props.quantity + 1);
+  const currentQty = Number(props.quantity);
+  const newQty = currentQty + 1;
+  emit("update-cart", props.product.id, newQty);
 };
 
 const decrement = () => {
-  if (props.quantity > 1) {
-    emit("update-cart", props.product.id, props.quantity - 1);
-  } else {
+  const currentQty = Number(props.quantity);
+  if (currentQty === 1) {
     emit("update-cart", props.product.id, 0);
+  } else if (currentQty > 1) {
+    emit("update-cart", props.product.id, currentQty - 1);
   }
 };
 </script>
@@ -73,7 +77,9 @@ const decrement = () => {
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition:
+    transform 0.3s,
+    box-shadow 0.3s;
   border: 1px solid #e0e0e0;
   display: flex;
   flex-direction: column;
