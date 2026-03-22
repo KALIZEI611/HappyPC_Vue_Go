@@ -43,3 +43,19 @@ type CartItem struct {
     Product   Product        `json:"product"`
     Quantity  int            `json:"quantity" gorm:"not null;default:1"`
 }
+type User struct {
+    ID           uint      `json:"id" gorm:"primarykey"`
+    CreatedAt    time.Time `json:"-"`
+    UpdatedAt    time.Time `json:"-"`
+    Username     string    `json:"username" gorm:"unique;not null"`
+    Email        string    `json:"email" gorm:"unique;not null"`
+    PasswordHash string    `json:"-" gorm:"not null"`
+}
+
+type Session struct {
+    ID        uint      `json:"id" gorm:"primarykey"`
+    Token     string    `json:"token" gorm:"unique;not null;index"`
+    UserID    uint      `json:"user_id" gorm:"not null;index"`
+    ExpiresAt time.Time `json:"expires_at"`
+    CreatedAt time.Time `json:"-"`
+}

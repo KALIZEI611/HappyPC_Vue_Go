@@ -1,4 +1,3 @@
-  
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 
@@ -6,6 +5,7 @@ export default defineConfig({
   plugins: [vue()],
   server: {
     proxy: {
+      '/api': 'http://localhost:8080',
       '/categories': 'http://localhost:8080',
       '/Processors': 'http://localhost:8080',
       '/Video_cards': 'http://localhost:8080',
@@ -19,7 +19,7 @@ export default defineConfig({
       '/Keyboards': 'http://localhost:8080',
       '/Mice': 'http://localhost:8080',
       '/Headphones': 'http://localhost:8080',
-      '/cart': 'http://localhost:8080', 
+      '/cart': 'http://localhost:8080',
     }
   }
 });
