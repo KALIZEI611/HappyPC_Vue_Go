@@ -172,21 +172,20 @@ const route = useRoute();
 const props = defineProps({
   cart: { type: Array, required: true },
 });
-
-const emit = defineEmits(["add-to-cart"]);
+const emit = defineEmits(["add-to-cart", "update-cart"]);
 
 const loading = ref(false);
 const error = ref(null);
 const category = ref(null);
 const products = ref([]);
 const sortBy = ref("default");
-const filters = ref({
-  priceMin: null,
-  priceMax: null,
-  brands: [],
-  minRating: 0,
-});
+const filters = ref({ priceMin: null, priceMax: null, brands: [], minRating: 0 });
 const showMobileFilters = ref(false);
+
+const getQuantity = (productId) => {
+  const item = props.cart.find((i) => i.product.id === productId);
+  return item ? item.quantity : 0;
+};
 
 const fetchCategoryData = async (categoryId) => {
   if (!categoryId) {
@@ -198,10 +197,12 @@ const fetchCategoryData = async (categoryId) => {
   error.value = null;
   try {
     const { data } = await axios.get(`/category/${categoryId}/products`);
+    if (!data.category) throw new Error("Категория не найдена");
     category.value = { ...data.category, icon: data.category.icon_url };
     products.value = data.products;
   } catch (err) {
     error.value = err.response?.data || err.message;
+    category.value = null;
   } finally {
     loading.value = false;
   }
@@ -233,11 +234,6 @@ const hasActiveFilters = computed(() => {
     filters.value.minRating > 0
   );
 });
-
-const getQuantity = (productId) => {
-  const item = props.cart.find((i) => i.product.id === productId);
-  return item ? item.quantity : 0;
-};
 
 const filteredProducts = computed(() => {
   let filtered = [...products.value];
