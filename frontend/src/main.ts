@@ -4,7 +4,23 @@ import router from "./router";
 import axios from "axios";
 import "./assets/styles.css";
 
-axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || "";
+axios.defaults.withCredentials = true;
+
+axios.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response?.status === 401) {
+      const currentPath = window.location.pathname;
+      const requestUrl = error.config.url;
+      if (requestUrl === '/api/me' || currentPath === '/login' || currentPath === '/register') {
+        return Promise.reject(error);
+      }
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 const app = createApp(App);
 app.use(router);

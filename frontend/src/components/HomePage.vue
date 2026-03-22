@@ -16,6 +16,11 @@ const categories = ref([]);
 const fetchCategories = async () => {
   try {
     const { data: cats } = await axios.get("/categories");
+    if (!Array.isArray(cats)) {
+      console.error("Ответ от сервера не является массивом:", cats);
+      categories.value = [];
+      return;
+    }
     const promises = cats.map(async (cat) => {
       const productsRes = await axios.get(`/${cat.url_key}`);
       return {

@@ -17,13 +17,17 @@
       </div>
 
       <ul class="nav-menu">
-        <li v-for="item in menuItems" :key="item.id">
+        <li v-for="item in displayMenuItems" :key="item.id">
           <a href="#" @click.prevent="handleMenuItemClick(item)">
             <i :class="item.icon"></i>
             <span>{{ item.name }}</span>
           </a>
         </li>
       </ul>
+
+      <div class="nav-auth" v-if="user">
+        <button @click="logout" class="logout-btn">Выйти</button>
+      </div>
 
       <router-link to="/cart" class="nav-cart">
         <i class="fas fa-shopping-cart"></i>
@@ -37,11 +41,14 @@
 
     <div v-if="mobileMenuOpen" class="mobile-menu">
       <ul>
-        <li v-for="item in menuItems" :key="item.id">
+        <li v-for="item in displayMenuItems" :key="item.id">
           <a href="#" @click.prevent="handleMenuItemClick(item)">
             <i :class="item.icon"></i>
             <span>{{ item.name }}</span>
           </a>
+        </li>
+        <li v-if="user">
+          <button @click="logout" class="mobile-logout-btn">Выйти</button>
         </li>
       </ul>
     </div>
@@ -49,17 +56,60 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { useRouter } from "vue-router";
-import { menuItems } from "../constants/menuItems";
+import { ref, computed, onMounted, watch } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import axios from "axios";
 
 const props = defineProps({
   cartCount: { type: Number, default: 0 },
 });
 
 const router = useRouter();
+const route = useRoute();
 const localSearchQuery = ref("");
 const mobileMenuOpen = ref(false);
+const user = ref(null);
+
+const baseMenuItems = [
+  { id: 1, name: "Категории", icon: "fas fa-th-large", action: "home" },
+  { id: 2, name: "Сборка ПК", icon: "fas fa-tv", action: "pc-assembly" },
+  { id: 3, name: "Профиль", icon: "fas fa-user", action: "profile" },
+];
+
+const displayMenuItems = computed(() => {
+  if (user.value) {
+    return baseMenuItems.map((item) => {
+      if (item.action === "profile") {
+        return { ...item, name: user.value.username };
+      }
+      return item;
+    });
+  }
+  return baseMenuItems;
+});
+
+const fetchUser = async () => {
+  if (route.path === "/login" || route.path === "/register") {
+    user.value = null;
+    return;
+  }
+  try {
+    const { data } = await axios.get("/api/me");
+    user.value = data;
+  } catch (err) {
+    user.value = null;
+  }
+};
+
+const logout = async () => {
+  try {
+    await axios.post("/api/logout");
+    user.value = null;
+    router.push("/");
+  } catch (err) {
+    console.error("Ошибка выхода:", err);
+  }
+};
 
 const performSearch = () => {
   const query = localSearchQuery.value.trim();
@@ -79,15 +129,21 @@ const handleMenuItemClick = (item) => {
       console.log("Переход на страницу сборки ПК");
       break;
     case "profile":
-      console.log("Переход на страницу профиля");
+      if (user.value) {
+        console.log("Переход на страницу профиля");
+      } else {
+        router.push("/login");
+      }
       break;
   }
 };
 
 const goToHome = () => router.push("/");
 const toggleMobileMenu = () => (mobileMenuOpen.value = !mobileMenuOpen.value);
-</script>
 
+onMounted(fetchUser);
+watch(() => route.path, fetchUser);
+</script>
 
 <style scoped>
 .navbar {
@@ -185,6 +241,27 @@ const toggleMobileMenu = () => (mobileMenuOpen.value = !mobileMenuOpen.value);
   font-size: 1.1rem;
 }
 
+.nav-auth {
+  margin-left: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  color: #e74c3c;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.logout-btn:hover {
+  background: #fee;
+}
+
 .nav-cart {
   position: relative;
   cursor: pointer;
@@ -237,6 +314,7 @@ const toggleMobileMenu = () => (mobileMenuOpen.value = !mobileMenuOpen.value);
 .mobile-menu ul {
   list-style: none;
   padding: 0;
+  margin: 0;
 }
 
 .mobile-menu li {
@@ -258,21 +336,36 @@ const toggleMobileMenu = () => (mobileMenuOpen.value = !mobileMenuOpen.value);
   color: #4a90e2;
 }
 
+.mobile-logout-btn {
+  width: 100%;
+  background: none;
+  border: none;
+  color: #e74c3c;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.mobile-logout-btn:hover {
+  background: #fee;
+}
+
 @media (max-width: 1024px) {
   .nav-menu {
     display: none;
   }
-
   .mobile-menu-btn {
     display: block;
   }
-
   .mobile-menu {
     display: block;
   }
-
   .nav-search {
     max-width: 250px;
+  }
+  .nav-auth {
+    display: none;
   }
 }
 
@@ -280,11 +373,9 @@ const toggleMobileMenu = () => (mobileMenuOpen.value = !mobileMenuOpen.value);
   .nav-container {
     padding: 1rem;
   }
-
   .nav-logo span {
     display: none;
   }
-
   .nav-search {
     margin: 0 1rem;
     max-width: 150px;
