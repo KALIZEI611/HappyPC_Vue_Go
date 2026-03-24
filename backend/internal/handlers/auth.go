@@ -174,8 +174,9 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(map[string]interface{}{
-        "id":       user.ID,
-        "username": user.Username,
-        "email":    user.Email,
+        "id":         user.ID,
+        "username":   user.Username,
+        "email":      user.Email,
+        "created_at": user.CreatedAt.Format(time.RFC3339),
     })
 }
