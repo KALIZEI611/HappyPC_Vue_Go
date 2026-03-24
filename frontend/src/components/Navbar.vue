@@ -130,7 +130,7 @@ const handleMenuItemClick = (item) => {
       break;
     case "profile":
       if (user.value) {
-        console.log("Переход на страницу профиля");
+        router.push("/profile");
       } else {
         router.push("/login");
       }

@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
+import axios from "axios";
 import HomePage from "../components/HomePage.vue";
 import CategoryPage from "../components/CategoryPage.vue";
 import CartPage from "../components/CartPage.vue";
@@ -6,6 +7,10 @@ import SearchPage from "../components/SearchPage.vue";
 import ProductPage from "../components/ProductPage.vue";
 import LoginPage from "../components/LoginPage.vue";
 import RegisterPage from "../components/RegisterPage.vue";
+import ProfilePage from "../components/ProfilePage.vue";
+
+// Устанавливаем withCredentials для axios
+axios.defaults.withCredentials = true;
 
 const routes = [
   { path: "/", name: "Home", component: HomePage },
@@ -20,6 +25,12 @@ const routes = [
   { path: "/product/:id", name: "Product", component: ProductPage },
   { path: "/login", name: "Login", component: LoginPage },
   { path: "/register", name: "Register", component: RegisterPage },
+  {
+    path: "/profile",
+    name: "Profile",
+    component: ProfilePage,
+    meta: { requiresAuth: true },
+  },
 ];
 
 const router = createRouter({
@@ -28,6 +39,24 @@ const router = createRouter({
   scrollBehavior(to, from, savedPosition) {
     return savedPosition || { top: 0 };
   },
+});
+
+router.beforeEach(async (to, from, next) => {
+  if (to.meta.requiresAuth) {
+    try {
+      const { data } = await axios.get("/api/me");
+      if (data) {
+        next();
+      } else {
+        next("/login");
+      }
+    } catch (err) {
+      console.error("Auth guard error:", err);
+      next("/login");
+    }
+  } else {
+    next();
+  }
 });
 
 export default router;
