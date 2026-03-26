@@ -61,7 +61,6 @@ func main() {
         r.Use(handlers.AuthMiddleware(sessionRepo, userRepo))
         r.Get("/api/profile", func(w http.ResponseWriter, r *http.Request) {
             user := handlers.GetUserFromContext(r.Context())
-            // просто заглушка, позже можно реализовать
             _ = user
         })
     })

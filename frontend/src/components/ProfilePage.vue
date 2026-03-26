@@ -2,7 +2,6 @@
   <div class="profile-page">
     <div class="container">
       <div class="profile-layout">
-        <!-- Левое меню -->
         <aside class="profile-sidebar">
           <nav class="profile-nav">
             <button
@@ -17,9 +16,7 @@
           </nav>
         </aside>
 
-        <!-- Основная область -->
         <main class="profile-content">
-          <!-- Вкладка "Мой профиль" -->
           <div v-if="activeTab === 'profile'" class="tab-content">
             <h2>Мой профиль</h2>
             <div v-if="loading" class="loading">Загрузка...</div>
@@ -40,7 +37,6 @@
             <div v-else class="error">Не удалось загрузить данные профиля</div>
           </div>
 
-          <!-- Заглушки для других вкладок -->
           <div v-else-if="activeTab === 'orders'" class="tab-content">
             <h2>Мои заказы</h2>
             <p>Здесь будут отображаться ваши заказы.</p>
@@ -68,7 +64,7 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import axios from "axios";
+import { userCache } from "../utils/cache";
 
 const activeTab = ref("profile");
 const user = ref(null);
@@ -95,10 +91,11 @@ const formatDate = (dateString) => {
 const fetchProfile = async () => {
   loading.value = true;
   try {
-    const { data } = await axios.get("/api/me");
+    const data = await userCache.fetch();
     user.value = data;
   } catch (err) {
     console.error("Ошибка загрузки профиля:", err);
+    user.value = null;
   } finally {
     loading.value = false;
   }
@@ -108,7 +105,6 @@ onMounted(() => {
   fetchProfile();
 });
 </script>
-
 <style scoped>
 .profile-page {
   min-height: 100vh;

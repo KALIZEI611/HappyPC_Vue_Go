@@ -36,17 +36,28 @@
 import { ref, computed, onMounted } from "vue";
 import axios from "axios";
 import ProductCard from "./ProductCard.vue";
+import { allProductsCache } from "../utils/cache";
 
 const props = defineProps({
   searchQuery: { type: String, default: "" },
   cart: { type: Array, required: true },
 });
 
-const loading = ref(true);
+const loading = ref(false);
 const allProducts = ref([]);
+let isFetching = false;
 
 const fetchAllProducts = async () => {
+  const cached = allProductsCache.get();
+  if (cached) {
+    allProducts.value = cached;
+    return;
+  }
+
+  if (isFetching) return;
+  isFetching = true;
   loading.value = true;
+
   try {
     const { data: cats } = await axios.get("/categories");
     const promises = cats.map(async (cat) => {
@@ -58,11 +69,14 @@ const fetchAllProducts = async () => {
       }
     });
     const results = await Promise.all(promises);
-    allProducts.value = results.flat();
+    const products = results.flat();
+    allProducts.value = products;
+    allProductsCache.set(products);
   } catch (err) {
     console.error("Ошибка загрузки товаров:", err);
   } finally {
     loading.value = false;
+    isFetching = false;
   }
 };
 
@@ -83,7 +97,6 @@ onMounted(() => {
   fetchAllProducts();
 });
 </script>
-
 <style scoped>
 .search-page {
   min-height: 100vh;

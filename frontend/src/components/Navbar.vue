@@ -56,9 +56,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
+import { clearAllCaches, userCache } from "../utils/cache";
 
 const props = defineProps({
   cartCount: { type: Number, default: 0 },
@@ -89,12 +90,13 @@ const displayMenuItems = computed(() => {
 });
 
 const fetchUser = async () => {
+  if (user.value !== null) return;
   if (route.path === "/login" || route.path === "/register") {
     user.value = null;
     return;
   }
   try {
-    const { data } = await axios.get("/api/me");
+    const data = await userCache.fetch();
     user.value = data;
   } catch (err) {
     user.value = null;
@@ -105,12 +107,12 @@ const logout = async () => {
   try {
     await axios.post("/api/logout");
     user.value = null;
+    clearAllCaches();
     router.push("/");
   } catch (err) {
     console.error("Ошибка выхода:", err);
   }
 };
-
 const performSearch = () => {
   const query = localSearchQuery.value.trim();
   if (query) {
@@ -142,7 +144,6 @@ const goToHome = () => router.push("/");
 const toggleMobileMenu = () => (mobileMenuOpen.value = !mobileMenuOpen.value);
 
 onMounted(fetchUser);
-watch(() => route.path, fetchUser);
 </script>
 
 <style scoped>
