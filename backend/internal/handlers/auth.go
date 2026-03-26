@@ -41,7 +41,6 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Проверка длины имени пользователя в символах (рунах), а не байтах
     if utf8.RuneCountInString(req.Username) > 10 {
         http.Error(w, "Username must be at most 10 characters", http.StatusBadRequest)
         return

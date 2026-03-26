@@ -9,7 +9,6 @@ import LoginPage from "../components/LoginPage.vue";
 import RegisterPage from "../components/RegisterPage.vue";
 import ProfilePage from "../components/ProfilePage.vue";
 
-// Устанавливаем withCredentials для axios
 axios.defaults.withCredentials = true;
 
 const routes = [

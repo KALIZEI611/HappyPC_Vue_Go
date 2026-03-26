@@ -42,7 +42,6 @@ const register = async () => {
   loading.value = true;
   error.value = "";
 
-  // Проверка длины имени пользователя в символах (используем spread для корректного подсчёта Unicode)
   if ([...username.value].length > 10) {
     error.value = "Имя пользователя не должно превышать 10 символов";
     loading.value = false;

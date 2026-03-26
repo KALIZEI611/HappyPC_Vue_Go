@@ -18,7 +18,7 @@
       <div v-else-if="error" class="error-state">
         <i class="fas fa-exclamation-circle"></i>
         <p>{{ error }}</p>
-        <button @click="fetchCategoryData" class="retry-btn">
+        <button @click="fetchCategoryData(route.params.id)" class="retry-btn">
           <i class="fas fa-redo"></i> Повторить
         </button>
       </div>
@@ -31,7 +31,11 @@
         <aside class="filter-sidebar">
           <div class="filter-header">
             <h3>Фильтры</h3>
-            <button v-if="hasActiveFilters" @click="resetFilters" class="reset-filters">
+            <button
+              v-if="hasActiveFilters"
+              @click="resetFilters"
+              class="reset-filters"
+            >
               <i class="fas fa-times"></i> Сбросить
             </button>
           </div>
@@ -59,8 +63,16 @@
           <div class="filter-section">
             <h4>Бренд</h4>
             <div class="brand-list">
-              <label v-for="brand in availableBrands" :key="brand" class="brand-checkbox">
-                <input type="checkbox" :value="brand" v-model="filters.brands" />
+              <label
+                v-for="brand in availableBrands"
+                :key="brand"
+                class="brand-checkbox"
+              >
+                <input
+                  type="checkbox"
+                  :value="brand"
+                  v-model="filters.brands"
+                />
                 {{ brand }}
               </label>
             </div>
@@ -87,9 +99,17 @@
             <div class="filter-section">
               <h4>Цена, ₽</h4>
               <div class="price-inputs">
-                <input type="number" v-model.number="filters.priceMin" placeholder="от" />
+                <input
+                  type="number"
+                  v-model.number="filters.priceMin"
+                  placeholder="от"
+                />
                 <span>—</span>
-                <input type="number" v-model.number="filters.priceMax" placeholder="до" />
+                <input
+                  type="number"
+                  v-model.number="filters.priceMax"
+                  placeholder="до"
+                />
               </div>
             </div>
             <div class="filter-section">
@@ -100,7 +120,11 @@
                   :key="brand"
                   class="brand-checkbox"
                 >
-                  <input type="checkbox" :value="brand" v-model="filters.brands" />
+                  <input
+                    type="checkbox"
+                    :value="brand"
+                    v-model="filters.brands"
+                  />
                   {{ brand }}
                 </label>
               </div>
@@ -113,7 +137,11 @@
                 <option :value="4.5">4.5 и выше</option>
               </select>
             </div>
-            <button v-if="hasActiveFilters" @click="resetFilters" class="reset-filters">
+            <button
+              v-if="hasActiveFilters"
+              @click="resetFilters"
+              class="reset-filters"
+            >
               Сбросить фильтры
             </button>
             <button @click="showMobileFilters = false" class="apply-filters">
@@ -125,7 +153,8 @@
         <section class="products-section">
           <div class="products-header">
             <div class="results-info">
-              Показано {{ filteredProducts.length }} из {{ products.length }} товаров
+              Показано {{ filteredProducts.length }} из
+              {{ products.length }} товаров
             </div>
             <div class="sort-selector">
               <label for="sort">Сортировка:</label>
@@ -167,6 +196,7 @@ import { ref, computed, watch } from "vue";
 import { useRoute } from "vue-router";
 import axios from "axios";
 import ProductCard from "./ProductCard.vue";
+import { categoryProductsCache } from "../utils/cache";
 
 const route = useRoute();
 const props = defineProps({
@@ -179,7 +209,12 @@ const error = ref(null);
 const category = ref(null);
 const products = ref([]);
 const sortBy = ref("default");
-const filters = ref({ priceMin: null, priceMax: null, brands: [], minRating: 0 });
+const filters = ref({
+  priceMin: null,
+  priceMax: null,
+  brands: [],
+  minRating: 0,
+});
 const showMobileFilters = ref(false);
 
 const getQuantity = (productId) => {
@@ -193,13 +228,26 @@ const fetchCategoryData = async (categoryId) => {
     loading.value = false;
     return;
   }
+
+  const cached = categoryProductsCache.get(categoryId);
+  if (cached) {
+    category.value = cached.category;
+    products.value = cached.products;
+    return;
+  }
+
   loading.value = true;
   error.value = null;
   try {
     const { data } = await axios.get(`/category/${categoryId}/products`);
     if (!data.category) throw new Error("Категория не найдена");
-    category.value = { ...data.category, icon: data.category.icon_url };
+    const categoryData = { ...data.category, icon: data.category.icon_url };
+    category.value = categoryData;
     products.value = data.products;
+    categoryProductsCache.set(categoryId, {
+      category: categoryData,
+      products: data.products,
+    });
   } catch (err) {
     error.value = err.response?.data || err.message;
     category.value = null;
@@ -213,14 +261,16 @@ watch(
   (newId) => {
     fetchCategoryData(newId);
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 const priceMin = computed(() =>
-  products.value.length ? Math.min(...products.value.map((p) => p.price)) : 0
+  products.value.length ? Math.min(...products.value.map((p) => p.price)) : 0,
 );
 const priceMax = computed(() =>
-  products.value.length ? Math.max(...products.value.map((p) => p.price)) : 100000
+  products.value.length
+    ? Math.max(...products.value.map((p) => p.price))
+    : 100000,
 );
 const availableBrands = computed(() => {
   const brands = products.value.map((p) => p.name.split(" ")[0]);
@@ -245,7 +295,7 @@ const filteredProducts = computed(() => {
   }
   if (filters.value.brands.length > 0) {
     filtered = filtered.filter((p) =>
-      filters.value.brands.includes(p.name.split(" ")[0])
+      filters.value.brands.includes(p.name.split(" ")[0]),
     );
   }
   if (filters.value.minRating > 0) {
@@ -269,7 +319,6 @@ const filteredProducts = computed(() => {
   return filtered;
 });
 
-const isInCart = (productId) => props.cart.some((item) => item.product.id === productId);
 const resetFilters = () => {
   filters.value = {
     priceMin: null,

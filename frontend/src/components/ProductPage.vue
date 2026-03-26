@@ -27,7 +27,9 @@
             ></i>
             <span class="rating-value">{{ product.rating }}</span>
           </div>
-          <div class="product-price">{{ product.price.toLocaleString() }} ₽</div>
+          <div class="product-price">
+            {{ product.price.toLocaleString() }} ₽
+          </div>
 
           <div class="product-description" v-if="product.description">
             <h3>Описание</h3>
@@ -62,11 +64,11 @@ import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
 import { specMapping } from "../constants/specMapping";
+import { allProductsCache } from "../utils/cache";
 
 const props = defineProps({
   cart: { type: Array, required: true },
 });
-
 const emit = defineEmits(["add-to-cart"]);
 
 const route = useRoute();
@@ -74,17 +76,30 @@ const router = useRouter();
 const loading = ref(true);
 const error = ref(null);
 const product = ref(null);
+let isFetching = false;
 
 const fetchProduct = async () => {
-  loading.value = true;
-  error.value = null;
-
   const productId = parseInt(route.params.id);
   if (isNaN(productId)) {
     error.value = "Неверный идентификатор товара";
     loading.value = false;
     return;
   }
+
+  const cachedAllProducts = allProductsCache.get();
+  if (cachedAllProducts) {
+    const found = cachedAllProducts.find((p) => p.id === productId);
+    if (found) {
+      product.value = found;
+      loading.value = false;
+      return;
+    }
+  }
+
+  if (isFetching) return;
+  isFetching = true;
+  loading.value = true;
+  error.value = null;
 
   try {
     const { data: cats } = await axios.get("/categories");
@@ -98,6 +113,7 @@ const fetchProduct = async () => {
     });
     const results = await Promise.all(promises);
     const allProducts = results.flat();
+    allProductsCache.set(allProducts);
     const found = allProducts.find((p) => p.id === productId);
     if (found) {
       product.value = found;
@@ -109,13 +125,13 @@ const fetchProduct = async () => {
     error.value = "Не удалось загрузить товар. Попробуйте позже.";
   } finally {
     loading.value = false;
+    isFetching = false;
   }
 };
 
 onMounted(() => {
   fetchProduct();
 });
-
 const parsedSpecs = computed(() => {
   if (!product.value?.specs) return {};
   if (typeof product.value.specs === "string") {
