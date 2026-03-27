@@ -56,7 +56,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
 import { clearAllCaches, userCache } from "../utils/cache";
@@ -90,11 +90,11 @@ const displayMenuItems = computed(() => {
 });
 
 const fetchUser = async () => {
-  if (user.value !== null) return;
   if (route.path === "/login" || route.path === "/register") {
     user.value = null;
     return;
   }
+  if (user.value !== null) return;
   try {
     const data = await userCache.fetch();
     user.value = data;
@@ -113,6 +113,7 @@ const logout = async () => {
     console.error("Ошибка выхода:", err);
   }
 };
+
 const performSearch = () => {
   const query = localSearchQuery.value.trim();
   if (query) {
@@ -143,6 +144,7 @@ const handleMenuItemClick = (item) => {
 const goToHome = () => router.push("/");
 const toggleMobileMenu = () => (mobileMenuOpen.value = !mobileMenuOpen.value);
 
+watch(() => route.path, fetchUser);
 onMounted(fetchUser);
 </script>
 
