@@ -1,7 +1,8 @@
 <template>
   <div class="app">
     <Navbar :cart-count="cartCount" />
-    <main class="main-content">
+    <Breadcrumbs v-if="showBreadcrumbs" :items="breadcrumbItems" />
+    <main class="main-content" :class="{ 'no-breadcrumbs': !showBreadcrumbs }">
       <router-view
         :cart="cart"
         @add-to-cart="addToCart"
@@ -14,13 +15,23 @@
 
 <script setup>
 import { ref, computed } from "vue";
+import { useRoute } from "vue-router";
 import Navbar from "./components/Navbar.vue";
+import Breadcrumbs from "./components/Breadcrumbs.vue";
+import { useBreadcrumbs } from "./composables/useBreadcrumbs";
+
+const { breadcrumbItems } = useBreadcrumbs();
+const route = useRoute();
 
 const cart = ref([]);
 
 const cartCount = computed(() =>
   cart.value.reduce((acc, item) => acc + item.quantity, 0)
 );
+
+const showBreadcrumbs = computed(() => {
+  return ["Search", "Category", "Product"].includes(route.name);
+});
 
 const addToCart = (product) => {
   const existing = cart.value.find((item) => item.product.id === product.id);
@@ -51,7 +62,10 @@ const removeFromCart = (productId) => {
   background-color: #f5f5f5;
 }
 .main-content {
-  padding-top: 80px;
+  padding-top: 20px; /* отступ после хлебных крошек */
   padding-bottom: 60px;
+}
+.main-content.no-breadcrumbs {
+  padding-top: 20px; /* оставляем небольшой отступ сверху, если хлебных крошек нет */
 }
 </style>

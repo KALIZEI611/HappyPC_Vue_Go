@@ -115,6 +115,13 @@ export const userCache = {
   },
 };
 
+export const categoriesCache = {
+  data: null,
+  set(value) { this.data = value; },
+  get() { return this.data; },
+  clear() { this.data = null; }
+};
+
 export function clearAllCaches() {
   homeCategoriesCache.clear();
   categoryProductsCache.clear();

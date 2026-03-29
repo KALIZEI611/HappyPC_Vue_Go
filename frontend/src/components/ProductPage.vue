@@ -27,9 +27,7 @@
             ></i>
             <span class="rating-value">{{ product.rating }}</span>
           </div>
-          <div class="product-price">
-            {{ product.price.toLocaleString() }} ₽
-          </div>
+          <div class="product-price">{{ product.price.toLocaleString() }} ₽</div>
 
           <div class="product-description" v-if="product.description">
             <h3>Описание</h3>
@@ -64,7 +62,8 @@ import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
 import { specMapping } from "../constants/specMapping";
-import { allProductsCache } from "../utils/cache";
+import { allProductsCache, homeCategoriesCache } from "../utils/cache";
+import { useBreadcrumbs } from "../composables/useBreadcrumbs";
 
 const props = defineProps({
   cart: { type: Array, required: true },
@@ -78,7 +77,12 @@ const error = ref(null);
 const product = ref(null);
 let isFetching = false;
 
+const { setBreadcrumbs } = useBreadcrumbs();
+
 const fetchProduct = async () => {
+  loading.value = true;
+  error.value = null;
+
   const productId = parseInt(route.params.id);
   if (isNaN(productId)) {
     error.value = "Неверный идентификатор товара";
@@ -91,6 +95,7 @@ const fetchProduct = async () => {
     const found = cachedAllProducts.find((p) => p.id === productId);
     if (found) {
       product.value = found;
+      await setProductBreadcrumbs(found);
       loading.value = false;
       return;
     }
@@ -98,8 +103,6 @@ const fetchProduct = async () => {
 
   if (isFetching) return;
   isFetching = true;
-  loading.value = true;
-  error.value = null;
 
   try {
     const { data: cats } = await axios.get("/categories");
@@ -117,6 +120,7 @@ const fetchProduct = async () => {
     const found = allProducts.find((p) => p.id === productId);
     if (found) {
       product.value = found;
+      await setProductBreadcrumbs(found);
     } else {
       error.value = "Товар не найден";
     }
@@ -129,9 +133,47 @@ const fetchProduct = async () => {
   }
 };
 
+const setProductBreadcrumbs = async (productData) => {
+  if (route.query.from === "search" && route.query.q) {
+    const searchQuery = route.query.q;
+    setBreadcrumbs([
+      { name: "Главная", path: "/" },
+      {
+        name: `Поиск: ${searchQuery}`,
+        path: `/search?q=${encodeURIComponent(searchQuery)}`,
+      },
+      { name: productData.name, path: `/product/${productData.id}` },
+    ]);
+    return;
+  }
+
+  let categoryName = null;
+  const cachedCategories = homeCategoriesCache.get();
+  if (cachedCategories) {
+    const category = cachedCategories.find((c) => c.id === productData.category_id);
+    if (category) categoryName = category.name;
+  }
+  if (!categoryName && productData.category_id) {
+    try {
+      const { data: category } = await axios.get(
+        `/category/${productData.category_id}/products`
+      );
+      categoryName = category.category.name;
+    } catch {
+      categoryName = "Категория";
+    }
+  }
+  setBreadcrumbs([
+    { name: "Главная", path: "/" },
+    { name: categoryName || "Категория", path: `/category/${productData.category_id}` },
+    { name: productData.name, path: `/product/${productData.id}` },
+  ]);
+};
+
 onMounted(() => {
   fetchProduct();
 });
+
 const parsedSpecs = computed(() => {
   if (!product.value?.specs) return {};
   if (typeof product.value.specs === "string") {
