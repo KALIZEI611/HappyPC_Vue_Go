@@ -105,11 +105,13 @@ onMounted(() => {
   fetchProfile();
 });
 </script>
+
 <style scoped>
 .profile-page {
   min-height: 100vh;
   background-color: #f5f5f5;
-  padding: 40px 0;
+  padding-top: 100px;
+  padding-bottom: 40px;
   display: flex;
   flex-direction: column;
 }

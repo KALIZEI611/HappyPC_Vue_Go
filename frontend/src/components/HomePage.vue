@@ -11,12 +11,16 @@ import axios from "axios";
 import HeroSection from "./HeroSection.vue";
 import CategoriesGrid from "./CategoriesGrid.vue";
 import { homeCategoriesCache } from "../utils/cache";
+import { useBreadcrumbs } from "../composables/useBreadcrumbs";
+
+const { setBreadcrumbs } = useBreadcrumbs();
 
 const categories = ref([]);
 let loading = false;
 
 const fetchCategories = async () => {
-  if (loading) return;
+  if (loading || categories.value.length > 0) return;
+
   const cached = homeCategoriesCache.get();
   if (cached) {
     categories.value = cached;
@@ -52,10 +56,15 @@ const fetchCategories = async () => {
   }
 };
 
-onMounted(fetchCategories);
+onMounted(() => {
+  fetchCategories();
+  setBreadcrumbs([{ name: "Главная", path: "/" }]);
+});
 </script>
+
 <style scoped>
 .home-page {
   min-height: 100vh;
 }
 </style>
+ 

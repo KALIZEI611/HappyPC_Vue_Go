@@ -37,7 +37,7 @@
 </template>
 
 <script setup>
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 
 const props = defineProps({
   product: { type: Object, required: true },
@@ -46,9 +46,20 @@ const props = defineProps({
 
 const emit = defineEmits(["add-to-cart", "update-cart"]);
 const router = useRouter();
+const route = useRoute();
 
 const goToProductPage = () => {
-  if (props.product) router.push(`/product/${props.product.id}`);
+  if (route.name === "Search") {
+    router.push({
+      path: `/product/${props.product.id}`,
+      query: {
+        from: "search",
+        q: route.query.q || "",
+      },
+    });
+  } else {
+    router.push(`/product/${props.product.id}`);
+  }
 };
 
 const handleAddToCart = () => {
@@ -77,9 +88,7 @@ const decrement = () => {
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  transition:
-    transform 0.3s,
-    box-shadow 0.3s;
+  transition: transform 0.3s, box-shadow 0.3s;
   border: 1px solid #e0e0e0;
   display: flex;
   flex-direction: column;

@@ -12,9 +12,7 @@
       </div>
 
       <div v-else-if="filteredProducts.length > 0" class="products-section">
-        <div class="results-info">
-          Найдено {{ filteredProducts.length }} товаров
-        </div>
+        <div class="results-info">Найдено {{ filteredProducts.length }} товаров</div>
         <div class="products-grid">
           <ProductCard
             v-for="product in filteredProducts"
@@ -22,9 +20,7 @@
             :product="product"
             :quantity="getQuantity(product.id)"
             @add-to-cart="$emit('add-to-cart', $event)"
-            @update-cart="
-              (productId, newQty) => $emit('update-cart', productId, newQty)
-            "
+            @update-cart="(productId, newQty) => $emit('update-cart', productId, newQty)"
           />
         </div>
       </div>
@@ -33,15 +29,20 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
+import { useRoute } from "vue-router";
 import axios from "axios";
 import ProductCard from "./ProductCard.vue";
 import { allProductsCache } from "../utils/cache";
+import { useBreadcrumbs } from "../composables/useBreadcrumbs";
 
 const props = defineProps({
   searchQuery: { type: String, default: "" },
   cart: { type: Array, required: true },
 });
+
+const route = useRoute();
+const { setBreadcrumbs } = useBreadcrumbs();
 
 const loading = ref(false);
 const allProducts = ref([]);
@@ -55,9 +56,9 @@ const fetchAllProducts = async () => {
   }
 
   if (isFetching) return;
+
   isFetching = true;
   loading.value = true;
-
   try {
     const { data: cats } = await axios.get("/categories");
     const promises = cats.map(async (cat) => {
@@ -84,7 +85,7 @@ const filteredProducts = computed(() => {
   if (!props.searchQuery) return [];
   const query = props.searchQuery.toLowerCase().trim();
   return allProducts.value.filter((product) =>
-    product.name.toLowerCase().includes(query),
+    product.name.toLowerCase().includes(query)
   );
 });
 
@@ -93,10 +94,24 @@ const getQuantity = (productId) => {
   return cartItem ? cartItem.quantity : 0;
 };
 
+const updateBreadcrumbs = () => {
+  setBreadcrumbs([
+    { name: "Главная", path: "/" },
+    {
+      name: `Поиск: ${props.searchQuery}`,
+      path: `/search?q=${encodeURIComponent(props.searchQuery)}`,
+    },
+  ]);
+};
+
 onMounted(() => {
   fetchAllProducts();
+  updateBreadcrumbs();
 });
+
+watch(() => props.searchQuery, updateBreadcrumbs);
 </script>
+
 <style scoped>
 .search-page {
   min-height: 100vh;
