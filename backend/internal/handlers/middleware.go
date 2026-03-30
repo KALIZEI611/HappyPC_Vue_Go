@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"backend/internal/models"
 	"backend/internal/repository"
@@ -26,6 +27,10 @@ func AuthMiddleware(sessionRepo *repository.SessionRepository, userRepo *reposit
                 next.ServeHTTP(w, r)
                 return
             }
+
+            // Обновляем время истечения
+            session.ExpiresAt = time.Now().Add(15 * time.Minute)
+            sessionRepo.Update(session)
 
             user, err := userRepo.FindByID(session.UserID)
             if err != nil {
