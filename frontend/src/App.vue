@@ -8,6 +8,7 @@
         @add-to-cart="addToCart"
         @update-cart="updateCart"
         @remove-from-cart="removeFromCart"
+        @cart-cleared="handleCartCleared"
       />
     </main>
   </div>
@@ -29,7 +30,7 @@ const router = useRouter();
 const cart = ref([]);
 
 const cartCount = computed(() =>
-  cart.value.reduce((acc, item) => acc + item.quantity, 0),
+  cart.value.reduce((acc, item) => acc + item.quantity, 0)
 );
 
 const showBreadcrumbs = computed(() => {
@@ -81,6 +82,10 @@ const removeFromCart = async (productId) => {
   } catch (err) {
     console.error("Ошибка удаления из корзины:", err);
   }
+};
+
+const handleCartCleared = async () => {
+  await fetchCart(); // обновить корзину после очистки
 };
 
 watch(user, async (newUser) => {

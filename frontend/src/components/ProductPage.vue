@@ -27,9 +27,7 @@
             ></i>
             <span class="rating-value">{{ product.rating }}</span>
           </div>
-          <div class="product-price">
-            {{ product.price.toLocaleString() }} ₽
-          </div>
+          <div class="product-price">{{ product.price.toLocaleString() }} ₽</div>
 
           <div class="product-description" v-if="product.description">
             <h3>Описание</h3>
@@ -87,9 +85,7 @@ let isFetching = false;
 const { setBreadcrumbs } = useBreadcrumbs();
 
 const quantity = computed(() => {
-  const cartItem = props.cart.find(
-    (item) => item.product.id === product.value?.id,
-  );
+  const cartItem = props.cart.find((item) => item.product.id === product.value?.id);
   return cartItem ? cartItem.quantity : 0;
 });
 
@@ -164,15 +160,13 @@ const setProductBreadcrumbs = async (productData) => {
   let categoryName = null;
   const cachedCategories = homeCategoriesCache.get();
   if (cachedCategories) {
-    const category = cachedCategories.find(
-      (c) => c.id === productData.category_id,
-    );
+    const category = cachedCategories.find((c) => c.id === productData.category_id);
     if (category) categoryName = category.name;
   }
   if (!categoryName && productData.category_id) {
     try {
       const { data: category } = await axios.get(
-        `/category/${productData.category_id}/products`,
+        `/category/${productData.category_id}/products`
       );
       categoryName = category.category.name;
     } catch {
@@ -389,18 +383,19 @@ const formatSpecKey = (key) => specMapping[key] || key;
   display: inline-block;
 }
 
+/* Центрирование блока с количеством */
 .quantity-controls {
-  display: inline-flex;
-  align-items: center;
+  display: flex;
   justify-content: center;
+  align-items: center;
   gap: 12px;
   background: #f8f9fa;
   border-radius: 30px;
   padding: 8px 12px;
   border: 1px solid #e0e0e0;
-  width: auto;
+  width: fit-content;
+  margin: 20px auto 0;
   box-sizing: border-box;
-  margin-top: 20px;
 }
 
 .qty-btn {

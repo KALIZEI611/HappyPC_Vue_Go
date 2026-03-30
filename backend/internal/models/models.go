@@ -59,3 +59,22 @@ type Session struct {
     ExpiresAt time.Time `json:"expires_at"`
     CreatedAt time.Time `json:"-"`
 }
+
+type Order struct {
+    gorm.Model
+    UserID          uint        `json:"user_id"`
+    Items           []OrderItem `json:"items"`
+    DeliveryMethod  string      `json:"delivery_method"` // pickup, delivery
+    DeliveryAddress string      `json:"delivery_address"`
+    PaymentMethod   string      `json:"payment_method"`  // online, upon_receipt, credit
+    TotalPrice      float64     `json:"total_price"`
+    Status          string      `json:"status" gorm:"default:'pending'"`
+}
+
+type OrderItem struct {
+    gorm.Model
+    OrderID   uint    `json:"order_id"`
+    ProductID uint    `json:"product_id"`
+    Quantity  int     `json:"quantity"`
+    Price     float64 `json:"price"`
+}

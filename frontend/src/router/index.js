@@ -8,6 +8,9 @@ import ProductPage from "../components/ProductPage.vue";
 import LoginPage from "../components/LoginPage.vue";
 import RegisterPage from "../components/RegisterPage.vue";
 import ProfilePage from "../components/ProfilePage.vue";
+import CheckoutPage from "../components/CheckoutPage.vue";
+import OrderSuccessPage from "../components/OrderSuccessPage.vue";
+import OrdersPage from "../components/OrdersPage.vue";
 
 axios.defaults.withCredentials = true;
 
@@ -30,6 +33,11 @@ const routes = [
     component: ProfilePage,
     meta: { requiresAuth: true },
   },
+  
+  { path: "/checkout", name: "Checkout", component: CheckoutPage, meta: { requiresAuth: true } },
+  { path: "/order-success", name: "OrderSuccess", component: OrderSuccessPage },
+  {path: "/profile/orders", name: "Orders", component: OrdersPage, meta: { requiresAuth: true }},
+  
 ];
 
 const router = createRouter({

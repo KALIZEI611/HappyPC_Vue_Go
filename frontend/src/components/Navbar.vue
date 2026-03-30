@@ -25,9 +25,6 @@
         </li>
       </ul>
 
-      <div class="nav-auth" v-if="user">
-        <button @click="logout" class="logout-btn">Выйти</button>
-      </div>
 
       <router-link to="/cart" class="nav-cart">
         <i class="fas fa-shopping-cart"></i>
@@ -47,19 +44,15 @@
             <span>{{ item.name }}</span>
           </a>
         </li>
-        <li v-if="user">
-          <button @click="logout" class="mobile-logout-btn">Выйти</button>
-        </li>
       </ul>
     </div>
   </nav>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import axios from "axios";
-import { clearAllCaches, user, fetchUser, clearUser } from "../utils/cache";
+import { user, fetchUser } from "../utils/cache";
 
 const props = defineProps({
   cartCount: { type: Number, default: 0 },
@@ -87,17 +80,6 @@ const displayMenuItems = computed(() => {
   }
   return baseMenuItems;
 });
-
-const logout = async () => {
-  try {
-    await axios.post("/api/logout");
-    clearUser();
-    clearAllCaches();
-    router.push("/");
-  } catch (err) {
-    console.error("Ошибка выхода:", err);
-  }
-};
 
 const performSearch = () => {
   const query = localSearchQuery.value.trim();
@@ -129,8 +111,8 @@ const handleMenuItemClick = (item) => {
 const goToHome = () => router.push("/");
 const toggleMobileMenu = () => (mobileMenuOpen.value = !mobileMenuOpen.value);
 
-onMounted(async () => {
-  await fetchUser();
+onMounted(() => {
+  fetchUser();
 });
 </script>
 
