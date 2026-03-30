@@ -38,7 +38,7 @@ type CartItem struct {
     CreatedAt time.Time      `json:"-"`
     UpdatedAt time.Time      `json:"-"`
     DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
-    CartID    string         `json:"cart_id" gorm:"index"`
+    UserID    uint           `json:"user_id" gorm:"not null;index"`
     ProductID uint           `json:"product_id"`
     Product   Product        `json:"product"`
     Quantity  int            `json:"quantity" gorm:"not null;default:1"`

@@ -64,10 +64,9 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { userCache } from "../utils/cache";
+import { user, fetchUser } from "../utils/cache";
 
 const activeTab = ref("profile");
-const user = ref(null);
 const loading = ref(true);
 
 const menuItems = [
@@ -88,21 +87,10 @@ const formatDate = (dateString) => {
   });
 };
 
-const fetchProfile = async () => {
+onMounted(async () => {
   loading.value = true;
-  try {
-    const data = await userCache.fetch();
-    user.value = data;
-  } catch (err) {
-    console.error("Ошибка загрузки профиля:", err);
-    user.value = null;
-  } finally {
-    loading.value = false;
-  }
-};
-
-onMounted(() => {
-  fetchProfile();
+  await fetchUser();
+  loading.value = false;
 });
 </script>
 

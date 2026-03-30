@@ -14,46 +14,89 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
-import { useRoute } from "vue-router";
+import { ref, computed, onMounted, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import Navbar from "./components/Navbar.vue";
 import Breadcrumbs from "./components/Breadcrumbs.vue";
 import { useBreadcrumbs } from "./composables/useBreadcrumbs";
+import { cartService } from "./services/cartService";
+import { user, fetchUser } from "./utils/cache";
 
 const { breadcrumbItems } = useBreadcrumbs();
 const route = useRoute();
+const router = useRouter();
 
 const cart = ref([]);
 
 const cartCount = computed(() =>
-  cart.value.reduce((acc, item) => acc + item.quantity, 0)
+  cart.value.reduce((acc, item) => acc + item.quantity, 0),
 );
 
 const showBreadcrumbs = computed(() => {
   return ["Search", "Category", "Product"].includes(route.name);
 });
 
-const addToCart = (product) => {
-  const existing = cart.value.find((item) => item.product.id === product.id);
-  if (existing) {
-    existing.quantity += 1;
-  } else {
-    cart.value.push({ product, quantity: 1 });
+const fetchCart = async () => {
+  if (!user.value) return;
+  try {
+    const items = await cartService.getCart();
+    cart.value = items;
+  } catch (err) {
+    console.error("Ошибка загрузки корзины:", err);
   }
 };
 
-const updateCart = (productId, newQuantity) => {
-  if (newQuantity <= 0) {
-    cart.value = cart.value.filter((item) => item.product.id !== productId);
-  } else {
-    const item = cart.value.find((item) => item.product.id === productId);
-    if (item) item.quantity = newQuantity;
+const addToCart = async (product) => {
+  if (!user.value) {
+    router.push("/login");
+    return;
+  }
+  try {
+    await cartService.addToCart(product.id, 1);
+    await fetchCart();
+  } catch (err) {
+    console.error("Ошибка добавления в корзину:", err);
   }
 };
 
-const removeFromCart = (productId) => {
-  cart.value = cart.value.filter((item) => item.product.id !== productId);
+const updateCart = async (productId, newQuantity) => {
+  if (!user.value) return;
+  try {
+    if (newQuantity <= 0) {
+      await cartService.removeCartItem(productId);
+    } else {
+      await cartService.updateCartItem(productId, newQuantity);
+    }
+    await fetchCart();
+  } catch (err) {
+    console.error("Ошибка обновления корзины:", err);
+  }
 };
+
+const removeFromCart = async (productId) => {
+  if (!user.value) return;
+  try {
+    await cartService.removeCartItem(productId);
+    await fetchCart();
+  } catch (err) {
+    console.error("Ошибка удаления из корзины:", err);
+  }
+};
+
+watch(user, async (newUser) => {
+  if (newUser) {
+    await fetchCart();
+  } else {
+    cart.value = [];
+  }
+});
+
+onMounted(async () => {
+  await fetchUser();
+  if (user.value) {
+    await fetchCart();
+  }
+});
 </script>
 
 <style scoped>
@@ -62,10 +105,10 @@ const removeFromCart = (productId) => {
   background-color: #f5f5f5;
 }
 .main-content {
-  padding-top: 20px; /* отступ после хлебных крошек */
+  padding-top: 20px;
   padding-bottom: 60px;
 }
 .main-content.no-breadcrumbs {
-  padding-top: 20px; /* оставляем небольшой отступ сверху, если хлебных крошек нет */
+  padding-top: 20px;
 }
 </style>
