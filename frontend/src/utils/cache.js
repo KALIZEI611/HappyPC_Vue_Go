@@ -155,6 +155,18 @@ export const categoriesCache = {
   },
 };
 
+export const logout = async () => {
+  try {
+    await axios.post("/api/logout");
+  } catch (err) {
+    console.error("Ошибка выхода:", err);
+  } finally {
+    clearUser();
+    clearAllCaches();
+    window.location.href = "/";
+  }
+};
+
 export function clearAllCaches() {
   homeCategoriesCache.clear();
   categoryProductsCache.clear();

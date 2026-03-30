@@ -22,7 +22,7 @@ func InitDB(cfg *config.Config) *gorm.DB {
         log.Fatal("Failed to connect to database:", err)
     }
     db.Migrator().DropTable(&models.CartItem{}) 
-    if err := db.AutoMigrate(&models.Category{}, &models.Product{}, &models.CartItem{}, &models.User{}, &models.Session{}); err != nil {
+    if err := db.AutoMigrate(&models.Category{}, &models.Product{}, &models.CartItem{}, &models.User{}, &models.Session{}, &models.Order{}, &models.OrderItem{}); err != nil {
         log.Fatal("Migration failed:", err)
     }
 

@@ -22,10 +22,12 @@ func main() {
     productRepo := repository.NewProductRepository(db)
     userRepo := repository.NewUserRepository(db)
     sessionRepo := repository.NewSessionRepository(db)
+    cartRepo := repository.NewCartRepository(db)
 
     categoryHandler := handlers.NewCategoryHandler(categoryRepo, productRepo)
     cartHandler := handlers.NewCartHandler(db)
     authHandler := handlers.NewAuthHandler(userRepo, sessionRepo)
+    orderHandler := handlers.NewOrderHandler(db, cartRepo)
 
     r := chi.NewRouter()
     r.Use(middleware.Logger)
@@ -42,22 +44,29 @@ func main() {
         AllowCredentials: true,
     }))
 
+    // Публичные маршруты
     r.Get("/categories", categoryHandler.GetAll)
     r.Get("/{urlKey}", categoryHandler.GetProductsByURLKey)
     r.Get("/category/{id}/products", categoryHandler.GetCategoryByID)
 
+    // API маршруты с аутентификацией
     r.Route("/api", func(r chi.Router) {
         r.Post("/register", authHandler.Register)
         r.Post("/login", authHandler.Login)
         r.Post("/logout", authHandler.Logout)
         r.Get("/me", authHandler.Me)
 
+        // Защищённые маршруты
         r.Group(func(r chi.Router) {
             r.Use(handlers.AuthMiddleware(sessionRepo, userRepo))
             r.Get("/cart", cartHandler.GetCart)
             r.Post("/cart", cartHandler.AddToCart)
             r.Put("/cart/{productId}", cartHandler.UpdateCartItem)
             r.Delete("/cart/{productId}", cartHandler.RemoveFromCart)
+            r.Delete("/cart", orderHandler.ClearCart)
+
+            r.Get("/orders", orderHandler.GetUserOrders)
+            r.Post("/orders", orderHandler.CreateOrder)
         })
     })
 
