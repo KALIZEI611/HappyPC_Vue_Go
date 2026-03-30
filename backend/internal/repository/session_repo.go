@@ -28,3 +28,7 @@ func (r *SessionRepository) FindByToken(token string) (*models.Session, error) {
 func (r *SessionRepository) DeleteByToken(token string) error {
     return r.db.Where("token = ?", token).Delete(&models.Session{}).Error
 }
+
+func (r *SessionRepository) Update(session *models.Session) error {
+    return r.db.Save(session).Error
+}
