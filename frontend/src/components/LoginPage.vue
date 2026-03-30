@@ -15,7 +15,8 @@
           <button type="submit" :disabled="loading">Войти</button>
           <p v-if="error" class="error">{{ error }}</p>
           <p>
-            Нет аккаунта? <router-link to="/register">Зарегистрироваться</router-link>
+            Нет аккаунта?
+            <router-link to="/register">Зарегистрироваться</router-link>
           </p>
         </form>
       </div>
@@ -27,6 +28,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
+import { fetchUser, userCache } from "../utils/cache";
 
 const router = useRouter();
 const email = ref("");
@@ -42,6 +44,9 @@ const login = async () => {
       email: email.value,
       password: password.value,
     });
+    // Очищаем кэш пользователя, чтобы fetchUser сделал новый запрос
+    userCache.clear();
+    await fetchUser(); // загружаем данные пользователя
     router.push("/");
   } catch (err) {
     error.value = err.response?.data || "Ошибка входа";

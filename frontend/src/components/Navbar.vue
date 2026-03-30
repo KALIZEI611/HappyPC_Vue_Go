@@ -59,7 +59,7 @@
 import { ref, computed, onMounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
-import { clearAllCaches, userCache } from "../utils/cache";
+import { clearAllCaches, user, fetchUser, clearUser } from "../utils/cache";
 
 const props = defineProps({
   cartCount: { type: Number, default: 0 },
@@ -69,7 +69,6 @@ const router = useRouter();
 const route = useRoute();
 const localSearchQuery = ref("");
 const mobileMenuOpen = ref(false);
-const user = ref(null);
 
 const baseMenuItems = [
   { id: 1, name: "Категории", icon: "fas fa-th-large", action: "home" },
@@ -89,25 +88,11 @@ const displayMenuItems = computed(() => {
   return baseMenuItems;
 });
 
-const fetchUser = async () => {
-  if (route.path === "/login" || route.path === "/register") {
-    user.value = null;
-    return;
-  }
-  if (user.value !== null) return;
-  try {
-    const data = await userCache.fetch();
-    user.value = data;
-  } catch (err) {
-    user.value = null;
-  }
-};
-
 const logout = async () => {
   try {
     await axios.post("/api/logout");
-    user.value = null;
-    clearAllCaches();
+    clearUser(); // сбрасываем реактивного пользователя
+    clearAllCaches(); // очищаем все кэши
     router.push("/");
   } catch (err) {
     console.error("Ошибка выхода:", err);
@@ -144,8 +129,9 @@ const handleMenuItemClick = (item) => {
 const goToHome = () => router.push("/");
 const toggleMobileMenu = () => (mobileMenuOpen.value = !mobileMenuOpen.value);
 
-watch(() => route.path, fetchUser);
-onMounted(fetchUser);
+onMounted(async () => {
+  await fetchUser();
+});
 </script>
 
 <style scoped>

@@ -30,6 +30,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
+import { fetchUser, userCache } from "../utils/cache";
 
 const router = useRouter();
 const username = ref("");
@@ -54,6 +55,8 @@ const register = async () => {
       email: email.value,
       password: password.value,
     });
+    userCache.clear();
+    await fetchUser();
     router.push("/");
   } catch (err) {
     error.value = err.response?.data || "Ошибка регистрации";

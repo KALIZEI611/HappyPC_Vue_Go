@@ -1,4 +1,32 @@
 import axios from "axios";
+import { ref } from "vue";
+
+// Реактивная переменная пользователя
+export const user = ref(null);
+export let userPromise = null;
+
+export const fetchUser = async () => {
+  if (user.value !== null) return user.value;
+  if (userPromise) return userPromise;
+  userPromise = axios
+    .get("/api/me")
+    .then((res) => {
+      user.value = res.data;
+      userPromise = null;
+      return user.value;
+    })
+    .catch((err) => {
+      user.value = null;
+      userPromise = null;
+      throw err;
+    });
+  return userPromise;
+};
+
+export const clearUser = () => {
+  user.value = null;
+  userPromise = null;
+};
 
 const storage = {
   get(key) {
@@ -117,9 +145,15 @@ export const userCache = {
 
 export const categoriesCache = {
   data: null,
-  set(value) { this.data = value; },
-  get() { return this.data; },
-  clear() { this.data = null; }
+  set(value) {
+    this.data = value;
+  },
+  get() {
+    return this.data;
+  },
+  clear() {
+    this.data = null;
+  },
 };
 
 export function clearAllCaches() {
