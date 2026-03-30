@@ -27,7 +27,9 @@
             ></i>
             <span class="rating-value">{{ product.rating }}</span>
           </div>
-          <div class="product-price">{{ product.price.toLocaleString() }} ₽</div>
+          <div class="product-price">
+            {{ product.price.toLocaleString() }} ₽
+          </div>
 
           <div class="product-description" v-if="product.description">
             <h3>Описание</h3>
@@ -43,13 +45,18 @@
             </ul>
           </div>
 
-          <button
-            @click="handleAddToCart"
-            class="add-to-cart"
-            :class="{ 'in-cart': isInCart }"
-          >
-            <i :class="isInCart ? 'fas fa-check' : 'fas fa-cart-plus'"></i>
-            {{ isInCart ? "В корзине" : "Добавить в корзину" }}
+          <div v-if="quantity > 0" class="quantity-controls" @click.stop>
+            <button @click="decrement" class="qty-btn">
+              <i class="fas fa-minus"></i>
+            </button>
+            <span class="quantity">{{ quantity }}</span>
+            <button @click="increment" class="qty-btn">
+              <i class="fas fa-plus"></i>
+            </button>
+          </div>
+
+          <button v-else @click="handleAddToCart" class="add-to-cart">
+            <i class="fas fa-cart-plus"></i> Добавить в корзину
           </button>
         </div>
       </div>
@@ -68,7 +75,7 @@ import { useBreadcrumbs } from "../composables/useBreadcrumbs";
 const props = defineProps({
   cart: { type: Array, required: true },
 });
-const emit = defineEmits(["add-to-cart"]);
+const emit = defineEmits(["add-to-cart", "update-cart"]);
 
 const route = useRoute();
 const router = useRouter();
@@ -78,6 +85,13 @@ const product = ref(null);
 let isFetching = false;
 
 const { setBreadcrumbs } = useBreadcrumbs();
+
+const quantity = computed(() => {
+  const cartItem = props.cart.find(
+    (item) => item.product.id === product.value?.id,
+  );
+  return cartItem ? cartItem.quantity : 0;
+});
 
 const fetchProduct = async () => {
   loading.value = true;
@@ -150,13 +164,15 @@ const setProductBreadcrumbs = async (productData) => {
   let categoryName = null;
   const cachedCategories = homeCategoriesCache.get();
   if (cachedCategories) {
-    const category = cachedCategories.find((c) => c.id === productData.category_id);
+    const category = cachedCategories.find(
+      (c) => c.id === productData.category_id,
+    );
     if (category) categoryName = category.name;
   }
   if (!categoryName && productData.category_id) {
     try {
       const { data: category } = await axios.get(
-        `/category/${productData.category_id}/products`
+        `/category/${productData.category_id}/products`,
       );
       categoryName = category.category.name;
     } catch {
@@ -165,7 +181,10 @@ const setProductBreadcrumbs = async (productData) => {
   }
   setBreadcrumbs([
     { name: "Главная", path: "/" },
-    { name: categoryName || "Категория", path: `/category/${productData.category_id}` },
+    {
+      name: categoryName || "Категория",
+      path: `/category/${productData.category_id}`,
+    },
     { name: productData.name, path: `/product/${productData.id}` },
   ]);
 };
@@ -173,6 +192,22 @@ const setProductBreadcrumbs = async (productData) => {
 onMounted(() => {
   fetchProduct();
 });
+
+const increment = () => {
+  emit("update-cart", product.value.id, quantity.value + 1);
+};
+
+const decrement = () => {
+  if (quantity.value === 1) {
+    emit("update-cart", product.value.id, 0);
+  } else {
+    emit("update-cart", product.value.id, quantity.value - 1);
+  }
+};
+
+const handleAddToCart = () => {
+  emit("add-to-cart", product.value);
+};
 
 const parsedSpecs = computed(() => {
   if (!product.value?.specs) return {};
@@ -185,18 +220,6 @@ const parsedSpecs = computed(() => {
   }
   return product.value.specs;
 });
-
-const isInCart = computed(() => {
-  return props.cart.some((item) => item.product.id === product.value?.id);
-});
-
-const handleAddToCart = () => {
-  if (isInCart.value) {
-    router.push("/cart");
-  } else {
-    emit("add-to-cart", product.value);
-  }
-};
 
 const formatSpecKey = (key) => specMapping[key] || key;
 </script>
@@ -366,6 +389,58 @@ const formatSpecKey = (key) => specMapping[key] || key;
   display: inline-block;
 }
 
+.quantity-controls {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #f8f9fa;
+  border-radius: 30px;
+  padding: 8px 12px;
+  border: 1px solid #e0e0e0;
+  width: auto;
+  box-sizing: border-box;
+  margin-top: 20px;
+}
+
+.qty-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: white;
+  color: #4a90e2;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  font-size: 1rem;
+}
+
+.qty-btn:hover:not(:disabled) {
+  background: #4a90e2;
+  color: white;
+  transform: scale(1.1);
+  box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
+}
+
+.qty-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #f1f1f1;
+  color: #999;
+}
+
+.quantity {
+  font-weight: 600;
+  color: #333;
+  min-width: 30px;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
 .add-to-cart {
   width: 100%;
   padding: 15px;
@@ -376,20 +451,12 @@ const formatSpecKey = (key) => specMapping[key] || key;
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: background-color 0.3s;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   margin-top: 20px;
-}
-
-.add-to-cart.in-cart {
-  background-color: #27ae60;
-}
-
-.add-to-cart.in-cart:hover {
-  background-color: #2ecc71;
 }
 
 .add-to-cart:hover {
@@ -418,6 +485,22 @@ const formatSpecKey = (key) => specMapping[key] || key;
 
   .product-price {
     font-size: 1.5rem;
+  }
+
+  .quantity-controls {
+    padding: 6px 10px;
+    gap: 8px;
+  }
+
+  .qty-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 0.8rem;
+  }
+
+  .quantity {
+    min-width: 24px;
+    font-size: 1rem;
   }
 }
 </style>

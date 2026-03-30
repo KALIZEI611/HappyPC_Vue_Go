@@ -31,7 +31,6 @@ const app = createApp(App);
 app.use(router);
 app.mount("#app");
 
-// Периодическое продление сессии (каждые 14 минут)
 setInterval(
   () => {
     if (user.value) {

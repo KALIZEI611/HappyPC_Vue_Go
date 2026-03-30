@@ -42,19 +42,16 @@ func main() {
         AllowCredentials: true,
     }))
 
-    // Публичные маршруты
     r.Get("/categories", categoryHandler.GetAll)
     r.Get("/{urlKey}", categoryHandler.GetProductsByURLKey)
     r.Get("/category/{id}/products", categoryHandler.GetCategoryByID)
 
-    // API маршруты с аутентификацией
     r.Route("/api", func(r chi.Router) {
         r.Post("/register", authHandler.Register)
         r.Post("/login", authHandler.Login)
         r.Post("/logout", authHandler.Logout)
         r.Get("/me", authHandler.Me)
 
-        // Защищённые маршруты
         r.Group(func(r chi.Router) {
             r.Use(handlers.AuthMiddleware(sessionRepo, userRepo))
             r.Get("/cart", cartHandler.GetCart)

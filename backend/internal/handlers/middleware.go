@@ -28,7 +28,6 @@ func AuthMiddleware(sessionRepo *repository.SessionRepository, userRepo *reposit
                 return
             }
 
-            // Обновляем время истечения
             session.ExpiresAt = time.Now().Add(15 * time.Minute)
             sessionRepo.Update(session)
 
