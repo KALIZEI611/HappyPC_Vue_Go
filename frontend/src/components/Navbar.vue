@@ -91,8 +91,8 @@ const displayMenuItems = computed(() => {
 const logout = async () => {
   try {
     await axios.post("/api/logout");
-    clearUser(); // сбрасываем реактивного пользователя
-    clearAllCaches(); // очищаем все кэши
+    clearUser();
+    clearAllCaches();
     router.push("/");
   } catch (err) {
     console.error("Ошибка выхода:", err);

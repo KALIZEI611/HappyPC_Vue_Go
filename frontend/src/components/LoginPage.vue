@@ -44,9 +44,8 @@ const login = async () => {
       email: email.value,
       password: password.value,
     });
-    // Очищаем кэш пользователя, чтобы fetchUser сделал новый запрос
     userCache.clear();
-    await fetchUser(); // загружаем данные пользователя
+    await fetchUser();
     router.push("/");
   } catch (err) {
     error.value = err.response?.data || "Ошибка входа";

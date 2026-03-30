@@ -1,7 +1,6 @@
 import axios from "axios";
 import { ref } from "vue";
 
-// Реактивная переменная пользователя
 export const user = ref(null);
 export let userPromise = null;
 
