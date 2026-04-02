@@ -102,7 +102,8 @@ func (h *OrderHandler) GetUserOrders(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    orders, err := h.orderRepo.GetUserOrders(user.ID)
+    var orders []models.Order
+    err := h.db.Preload("Items.Product").Where("user_id = ?", user.ID).Order("created_at desc").Find(&orders).Error
     if err != nil {
         http.Error(w, "Failed to fetch orders", http.StatusInternalServerError)
         return

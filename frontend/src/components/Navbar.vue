@@ -25,7 +25,6 @@
         </li>
       </ul>
 
-
       <router-link to="/cart" class="nav-cart">
         <i class="fas fa-shopping-cart"></i>
         <span class="cart-badge" v-if="cartCount > 0">{{ cartCount }}</span>
@@ -111,11 +110,15 @@ const handleMenuItemClick = (item) => {
 const goToHome = () => router.push("/");
 const toggleMobileMenu = () => (mobileMenuOpen.value = !mobileMenuOpen.value);
 
-onMounted(() => {
-  fetchUser();
+onMounted(async () => {
+  try {
+    await fetchUser();
+  } catch {
+    // Игнорируем ошибку (пользователь не авторизован)
+    user.value = null;
+  }
 });
 </script>
-
 <style scoped>
 .navbar {
   background: white;
