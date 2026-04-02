@@ -6,7 +6,9 @@
       <div v-if="cart.length === 0" class="empty-cart">
         <i class="fas fa-shopping-cart"></i>
         <p>Корзина пуста</p>
-        <router-link to="/" class="continue-shopping">Продолжить покупки</router-link>
+        <router-link to="/" class="continue-shopping"
+          >Продолжить покупки</router-link
+        >
       </div>
 
       <div v-else class="checkout-content">
@@ -86,7 +88,7 @@ import { user } from "../utils/cache";
 const props = defineProps({
   cart: { type: Array, required: true },
 });
-const emit = defineEmits(["cart-cleared"]);
+const emit = defineEmits(["cart-cleared"]); // <-- добавлено
 
 const router = useRouter();
 const loading = ref(false);
@@ -96,10 +98,10 @@ const address = ref("");
 const paymentMethod = ref("online");
 
 const subtotal = computed(() =>
-  props.cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
+  props.cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
 );
 const totalPrice = computed(() =>
-  deliveryMethod.value === "delivery" ? subtotal.value + 200 : subtotal.value
+  deliveryMethod.value === "delivery" ? subtotal.value + 200 : subtotal.value,
 );
 
 const submitOrder = async () => {
@@ -120,27 +122,19 @@ const submitOrder = async () => {
       price: item.product.price,
     }));
 
-    console.log("Sending order data:", {
-      items,
-      delivery_method: deliveryMethod.value,
-      delivery_address: deliveryMethod.value === "delivery" ? address.value : "",
-      payment_method: paymentMethod.value,
-      total_price: totalPrice.value,
-    });
-
     const response = await axios.post("/api/orders", {
       items,
       delivery_method: deliveryMethod.value,
-      delivery_address: deliveryMethod.value === "delivery" ? address.value : "",
+      delivery_address:
+        deliveryMethod.value === "delivery" ? address.value : "",
       payment_method: paymentMethod.value,
       total_price: totalPrice.value,
     });
 
     const orderId = response.data.id;
-    emit("cart-cleared"); // сигнал App.vue обновить корзину
+    emit("cart-cleared"); // <-- сигнал App.vue
     router.push({ path: "/order-success", query: { order_id: orderId } });
   } catch (err) {
-    console.error("Order error:", err);
     const message = err.response?.data || "Ошибка оформления заказа";
     alert(message);
   } finally {
@@ -148,7 +142,6 @@ const submitOrder = async () => {
   }
 };
 </script>
-
 
 <style scoped>
 .checkout-page {

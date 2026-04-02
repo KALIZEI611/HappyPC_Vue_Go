@@ -61,20 +61,27 @@ type Session struct {
 }
 
 type Order struct {
-    gorm.Model
-    UserID          uint        `json:"user_id"`
-    Items           []OrderItem `json:"items"`
-    DeliveryMethod  string      `json:"delivery_method"` // pickup, delivery
-    DeliveryAddress string      `json:"delivery_address"`
-    PaymentMethod   string      `json:"payment_method"`  // online, upon_receipt, credit
-    TotalPrice      float64     `json:"total_price"`
-    Status          string      `json:"status" gorm:"default:'pending'"`
+    ID              uint           `json:"id" gorm:"primarykey"`
+    CreatedAt       time.Time      `json:"created_at"`
+    UpdatedAt       time.Time      `json:"-"`
+    DeletedAt       gorm.DeletedAt `json:"-" gorm:"index"`
+    UserID          uint           `json:"user_id"`
+    Items           []OrderItem    `json:"items" gorm:"foreignKey:OrderID"`
+    DeliveryMethod  string         `json:"delivery_method"`
+    DeliveryAddress string         `json:"delivery_address"`
+    PaymentMethod   string         `json:"payment_method"`
+    TotalPrice      float64        `json:"total_price"`
+    Status          string         `json:"status" gorm:"default:'pending'"`
 }
 
 type OrderItem struct {
-    gorm.Model
-    OrderID   uint    `json:"order_id"`
-    ProductID uint    `json:"product_id"`
-    Quantity  int     `json:"quantity"`
-    Price     float64 `json:"price"`
+    ID        uint           `json:"id" gorm:"primarykey"`
+    CreatedAt time.Time      `json:"created_at"`
+    UpdatedAt time.Time      `json:"-"`
+    DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
+    OrderID   uint           `json:"order_id"`
+    ProductID uint           `json:"product_id"`
+    Product   Product        `json:"product" gorm:"foreignKey:ProductID"`
+    Quantity  int            `json:"quantity"`
+    Price     float64        `json:"price"`
 }
