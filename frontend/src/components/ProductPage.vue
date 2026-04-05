@@ -383,7 +383,6 @@ const formatSpecKey = (key) => specMapping[key] || key;
   display: inline-block;
 }
 
-/* Центрирование блока с количеством */
 .quantity-controls {
   display: flex;
   justify-content: center;

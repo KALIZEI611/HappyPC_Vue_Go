@@ -65,9 +65,9 @@
 
 <script setup>
 import { computed } from "vue";
-import { useRouter } from "vue-router"; // добавлено
+import { useRouter } from "vue-router";
 
-const router = useRouter(); // добавлено
+const router = useRouter();
 
 const props = defineProps({
   cart: { type: Array, required: true },

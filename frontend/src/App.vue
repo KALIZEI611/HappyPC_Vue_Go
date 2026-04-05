@@ -103,7 +103,6 @@ onMounted(async () => {
       await fetchCart();
     }
   } catch {
-    // неавторизован – ничего не делаем
   }
 });
 </script>
