@@ -31,7 +31,11 @@
         <aside class="filter-sidebar">
           <div class="filter-header">
             <h3>Фильтры</h3>
-            <button v-if="hasActiveFilters" @click="resetFilters" class="reset-filters">
+            <button
+              v-if="hasActiveFilters"
+              @click="resetFilters"
+              class="reset-filters"
+            >
               <i class="fas fa-times"></i> Сбросить
             </button>
           </div>
@@ -59,8 +63,16 @@
           <div class="filter-section">
             <h4>Бренд</h4>
             <div class="brand-list">
-              <label v-for="brand in availableBrands" :key="brand" class="brand-checkbox">
-                <input type="checkbox" :value="brand" v-model="filters.brands" />
+              <label
+                v-for="brand in availableBrands"
+                :key="brand"
+                class="brand-checkbox"
+              >
+                <input
+                  type="checkbox"
+                  :value="brand"
+                  v-model="filters.brands"
+                />
                 {{ brand }}
               </label>
             </div>
@@ -87,9 +99,17 @@
             <div class="filter-section">
               <h4>Цена, ₽</h4>
               <div class="price-inputs">
-                <input type="number" v-model.number="filters.priceMin" placeholder="от" />
+                <input
+                  type="number"
+                  v-model.number="filters.priceMin"
+                  placeholder="от"
+                />
                 <span>—</span>
-                <input type="number" v-model.number="filters.priceMax" placeholder="до" />
+                <input
+                  type="number"
+                  v-model.number="filters.priceMax"
+                  placeholder="до"
+                />
               </div>
             </div>
             <div class="filter-section">
@@ -100,7 +120,11 @@
                   :key="brand"
                   class="brand-checkbox"
                 >
-                  <input type="checkbox" :value="brand" v-model="filters.brands" />
+                  <input
+                    type="checkbox"
+                    :value="brand"
+                    v-model="filters.brands"
+                  />
                   {{ brand }}
                 </label>
               </div>
@@ -113,7 +137,11 @@
                 <option :value="4.5">4.5 и выше</option>
               </select>
             </div>
-            <button v-if="hasActiveFilters" @click="resetFilters" class="reset-filters">
+            <button
+              v-if="hasActiveFilters"
+              @click="resetFilters"
+              class="reset-filters"
+            >
               Сбросить фильтры
             </button>
             <button @click="showMobileFilters = false" class="apply-filters">
@@ -125,7 +153,8 @@
         <section class="products-section">
           <div class="products-header">
             <div class="results-info">
-              Показано {{ filteredProducts.length }} из {{ products.length }} товаров
+              Показано {{ filteredProducts.length }} из
+              {{ products.length }} товаров
             </div>
             <div class="sort-selector">
               <label for="sort">Сортировка:</label>
@@ -154,6 +183,7 @@
               @update-cart="
                 (productId, newQty) => $emit('update-cart', productId, newQty)
               "
+              @add-to-build="handleAddToBuild"
             />
           </div>
         </section>
@@ -164,13 +194,14 @@
 
 <script setup>
 import { ref, computed, watch } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
 import ProductCard from "./ProductCard.vue";
 import { categoryProductsCache } from "../utils/cache";
 import { useBreadcrumbs } from "../composables/useBreadcrumbs";
 
 const route = useRoute();
+const router = useRouter();
 const props = defineProps({
   cart: { type: Array, required: true },
 });
@@ -243,14 +274,25 @@ watch(
   (newId) => {
     fetchCategoryData(newId);
   },
-  { immediate: true }
+  { immediate: true },
 );
 
+const handleAddToBuild = (product) => {
+  const returnKey = sessionStorage.getItem("pcBuilderReturnKey");
+  if (returnKey) {
+    router.push(`/pc-builder?product_id=${product.id}`);
+  } else {
+    console.log("Режим не активен");
+  }
+};
+
 const priceMin = computed(() =>
-  products.value.length ? Math.min(...products.value.map((p) => p.price)) : 0
+  products.value.length ? Math.min(...products.value.map((p) => p.price)) : 0,
 );
 const priceMax = computed(() =>
-  products.value.length ? Math.max(...products.value.map((p) => p.price)) : 100000
+  products.value.length
+    ? Math.max(...products.value.map((p) => p.price))
+    : 100000,
 );
 const availableBrands = computed(() => {
   const brands = products.value.map((p) => p.name.split(" ")[0]);
@@ -275,7 +317,7 @@ const filteredProducts = computed(() => {
   }
   if (filters.value.brands.length > 0) {
     filtered = filtered.filter((p) =>
-      filters.value.brands.includes(p.name.split(" ")[0])
+      filters.value.brands.includes(p.name.split(" ")[0]),
     );
   }
   if (filters.value.minRating > 0) {
