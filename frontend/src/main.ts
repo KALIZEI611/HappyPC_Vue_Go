@@ -14,15 +14,13 @@ axios.interceptors.response.use(
     if (error.response?.status === 401) {
       const currentPath = window.location.pathname;
       const requestUrl = error.config.url;
-      // Не перенаправляем и не выводим ошибку для /api/me и для страниц логина/регистрации
       if (
         requestUrl === "/api/me" ||
         currentPath === "/login" ||
         currentPath === "/register"
       ) {
-        return Promise.reject(error); // просто пробрасываем, но не перенаправляем
+        return Promise.reject(error);
       }
-      // Для остальных запросов – перенаправляем на логин
       window.location.href = "/login";
     }
     return Promise.reject(error);

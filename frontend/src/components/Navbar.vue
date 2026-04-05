@@ -114,7 +114,6 @@ onMounted(async () => {
   try {
     await fetchUser();
   } catch {
-    // Игнорируем ошибку (пользователь не авторизован)
     user.value = null;
   }
 });

@@ -163,7 +163,6 @@ const getPaymentText = (method) => {
 };
 
 const getProductName = (productId) => {
-  // Пытаемся получить название товара из кэша всех товаров
   const allProducts = allProductsCache.get();
   if (allProducts) {
     const product = allProducts.find((p) => p.id === productId);
@@ -185,7 +184,6 @@ const fetchOrders = async () => {
   }
 };
 
-// Загружаем заказы при переключении на вкладку "orders"
 watch(activeTab, (newTab) => {
   if (newTab === "orders") {
     fetchOrders();
@@ -196,7 +194,6 @@ onMounted(async () => {
   await fetchUser();
   userData.value = user.value;
   loading.value = false;
-  // Если активна вкладка заказов при загрузке, загружаем их
   if (activeTab.value === "orders") {
     await fetchOrders();
   }

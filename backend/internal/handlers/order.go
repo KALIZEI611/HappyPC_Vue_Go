@@ -85,7 +85,6 @@ func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
     }
 
     if err := h.cartRepo.ClearCart(user.ID); err != nil {
-        // не критично, можно залогировать
     }
 
     w.WriteHeader(http.StatusCreated)
