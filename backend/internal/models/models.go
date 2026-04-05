@@ -31,6 +31,11 @@ type Product struct {
     Specs       json.RawMessage `json:"specs" gorm:"type:jsonb"`
     CategoryID  uint           `json:"category_id"`
     Category    Category       `json:"category,omitempty"`
+    Socket     string `json:"socket"`
+    RamType    string `json:"ram_type"`
+    TDP        int    `json:"tdp"`
+    FormFactor string `json:"form_factor"` 
+    Power      int    `json:"power"`
 }
 
 type CartItem struct {

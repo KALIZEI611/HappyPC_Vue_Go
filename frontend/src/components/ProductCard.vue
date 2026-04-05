@@ -18,19 +18,28 @@
       </div>
       <div class="product-price">{{ product.price.toLocaleString() }} ₽</div>
 
-      <div v-if="quantity > 0" class="quantity-controls" @click.stop>
-        <button @click="decrement" class="qty-btn">
-          <i class="fas fa-minus"></i>
-        </button>
-        <span class="quantity">{{ quantity }}</span>
-        <button @click="increment" class="qty-btn">
-          <i class="fas fa-plus"></i>
+      <!-- Режим сборки ПК: показываем кнопку "В сборку" -->
+      <div v-if="isBuilderMode">
+        <button @click.stop="addToBuild" class="add-to-build-btn">
+          <i class="fas fa-tools"></i> В сборку
         </button>
       </div>
 
-      <button v-else @click.stop="handleAddToCart" class="add-to-cart">
-        <i class="fas fa-cart-plus"></i> Добавить
-      </button>
+      <!-- Обычный режим: показываем управление корзиной -->
+      <div v-else>
+        <div v-if="quantity > 0" class="quantity-controls" @click.stop>
+          <button @click="decrement" class="qty-btn">
+            <i class="fas fa-minus"></i>
+          </button>
+          <span class="quantity">{{ quantity }}</span>
+          <button @click="increment" class="qty-btn">
+            <i class="fas fa-plus"></i>
+          </button>
+        </div>
+        <button v-else @click.stop="handleAddToCart" class="add-to-cart">
+          <i class="fas fa-cart-plus"></i> Добавить
+        </button>
+      </div>
     </div>
   </div>
   <div v-else class="product-card error">Товар временно недоступен</div>
@@ -38,15 +47,18 @@
 
 <script setup>
 import { useRouter, useRoute } from "vue-router";
+import { computed } from "vue";
 
 const props = defineProps({
   product: { type: Object, required: true },
   quantity: { type: Number, default: 0 },
 });
 
-const emit = defineEmits(["add-to-cart", "update-cart"]);
+const emit = defineEmits(["add-to-cart", "update-cart", "add-to-build"]);
 const router = useRouter();
 const route = useRoute();
+
+const isBuilderMode = computed(() => route.query.from === "builder");
 
 const goToProductPage = () => {
   if (route.name === "Search") {
@@ -66,18 +78,19 @@ const handleAddToCart = () => {
   emit("add-to-cart", props.product);
 };
 
+const addToBuild = () => {
+  emit("add-to-build", props.product);
+};
+
 const increment = () => {
-  const currentQty = Number(props.quantity);
-  const newQty = currentQty + 1;
-  emit("update-cart", props.product.id, newQty);
+  emit("update-cart", props.product.id, props.quantity + 1);
 };
 
 const decrement = () => {
-  const currentQty = Number(props.quantity);
-  if (currentQty === 1) {
+  if (props.quantity === 1) {
     emit("update-cart", props.product.id, 0);
-  } else if (currentQty > 1) {
-    emit("update-cart", props.product.id, currentQty - 1);
+  } else {
+    emit("update-cart", props.product.id, props.quantity - 1);
   }
 };
 </script>
@@ -88,7 +101,9 @@ const decrement = () => {
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition:
+    transform 0.3s,
+    box-shadow 0.3s;
   border: 1px solid #e0e0e0;
   display: flex;
   flex-direction: column;
@@ -184,7 +199,7 @@ const decrement = () => {
 }
 
 .quantity-controls {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
@@ -192,8 +207,7 @@ const decrement = () => {
   border-radius: 30px;
   padding: 8px 12px;
   border: 1px solid #e0e0e0;
-  width: auto;
-  box-sizing: border-box;
+  width: fit-content;
   margin: 0 auto;
 }
 .qty-btn {
@@ -254,6 +268,28 @@ const decrement = () => {
 
 .add-to-cart:hover {
   background-color: #2980b9;
+}
+
+.add-to-build-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #6c5ce7;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.add-to-build-btn:hover {
+  background-color: #5a4bcf;
 }
 
 @media (max-width: 768px) {

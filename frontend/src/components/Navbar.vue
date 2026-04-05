@@ -94,15 +94,15 @@ const handleMenuItemClick = (item) => {
     case "home":
       router.push("/");
       break;
-    case "pc-assembly":
-      console.log("Переход на страницу сборки ПК");
-      break;
     case "profile":
       if (user.value) {
         router.push("/profile");
       } else {
         router.push("/login");
       }
+      break;
+    case "pc-assembly":
+      router.push("/pc-builder");
       break;
   }
 };

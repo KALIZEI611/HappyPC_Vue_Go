@@ -57,7 +57,6 @@ func seedCategories(db *gorm.DB) {
         db.Create(&c)
     }
 }
-
 func seedProducts(db *gorm.DB) {
     var count int64
     db.Model(&models.Product{}).Count(&count)
@@ -73,6 +72,7 @@ func seedProducts(db *gorm.DB) {
     }
 
     products := []models.Product{
+        // ==================== Процессоры ====================
         {
             Name:        "Intel Core i5-13400F",
             Price:       18990,
@@ -81,6 +81,9 @@ func seedProducts(db *gorm.DB) {
             Description: "Процессор Intel Core i5-13400F для LGA 1700, 10 ядер (6P+4E), до 4.6 ГГц, без встроенной графики",
             Specs:       json.RawMessage(`{"socket":"LGA 1700","cores":10,"threads":16,"frequency":"до 4.6 ГГц","cache":"20 MB"}`),
             CategoryID:  catMap["Processors"],
+            Socket:      "LGA 1700",
+            TDP:         65,
+            RamType:     "DDR4",
         },
         {
             Name:        "AMD Ryzen 5 7600X",
@@ -90,6 +93,9 @@ func seedProducts(db *gorm.DB) {
             Description: "Процессор AMD Ryzen 5 7600X для AM5, 6 ядер, до 5.3 ГГц, без кулера",
             Specs:       json.RawMessage(`{"socket":"AM5","cores":6,"threads":12,"frequency":"до 5.3 ГГц","cache":"38 MB"}`),
             CategoryID:  catMap["Processors"],
+            Socket:      "AM5",
+            TDP:         105,
+            RamType:     "DDR5",
         },
         {
             Name:        "Intel Core i7-13700K",
@@ -99,6 +105,9 @@ func seedProducts(db *gorm.DB) {
             Description: "Процессор Intel Core i7-13700K для LGA 1700, 16 ядер (8P+8E), до 5.4 ГГц, Intel UHD Graphics 770",
             Specs:       json.RawMessage(`{"socket":"LGA 1700","cores":16,"threads":24,"frequency":"до 5.4 ГГц","cache":"30 MB"}`),
             CategoryID:  catMap["Processors"],
+            Socket:      "LGA 1700",
+            TDP:         125,
+            RamType:     "DDR5",
         },
         {
             Name:        "AMD Ryzen 7 7800X3D",
@@ -108,6 +117,9 @@ func seedProducts(db *gorm.DB) {
             Description: "Процессор AMD Ryzen 7 7800X3D для AM5, 8 ядер, до 5.0 ГГц, 3D V-Cache, без встроенной графики",
             Specs:       json.RawMessage(`{"socket":"AM5","cores":8,"threads":16,"frequency":"до 5.0 ГГц","cache":"104 MB"}`),
             CategoryID:  catMap["Processors"],
+            Socket:      "AM5",
+            TDP:         120,
+            RamType:     "DDR5",
         },
         {
             Name:        "Intel Core i9-14900KF",
@@ -117,6 +129,9 @@ func seedProducts(db *gorm.DB) {
             Description: "Процессор Intel Core i9-14900KF для LGA 1700, 24 ядра (8P+16E), до 6.0 ГГц, без встроенной графики",
             Specs:       json.RawMessage(`{"socket":"LGA 1700","cores":24,"threads":32,"frequency":"до 6.0 ГГц","cache":"36 MB"}`),
             CategoryID:  catMap["Processors"],
+            Socket:      "LGA 1700",
+            TDP:         125,
+            RamType:     "DDR5",
         },
         {
             Name:        "AMD Ryzen 9 7950X",
@@ -126,6 +141,9 @@ func seedProducts(db *gorm.DB) {
             Description: "Процессор AMD Ryzen 9 7950X для AM5, 16 ядер, до 5.7 ГГц, без кулера",
             Specs:       json.RawMessage(`{"socket":"AM5","cores":16,"threads":32,"frequency":"до 5.7 ГГц","cache":"80 MB"}`),
             CategoryID:  catMap["Processors"],
+            Socket:      "AM5",
+            TDP:         170,
+            RamType:     "DDR5",
         },
         {
             Name:        "Intel Core i5-12400F",
@@ -135,6 +153,9 @@ func seedProducts(db *gorm.DB) {
             Description: "Процессор Intel Core i5-12400F для LGA 1700, 6 ядер, до 4.4 ГГц, без встроенной графики",
             Specs:       json.RawMessage(`{"socket":"LGA 1700","cores":6,"threads":12,"frequency":"до 4.4 ГГц","cache":"18 MB"}`),
             CategoryID:  catMap["Processors"],
+            Socket:      "LGA 1700",
+            TDP:         65,
+            RamType:     "DDR4",
         },
         {
             Name:        "AMD Ryzen 5 5600",
@@ -144,7 +165,12 @@ func seedProducts(db *gorm.DB) {
             Description: "Процессор AMD Ryzen 5 5600 для AM4, 6 ядер, до 4.4 ГГц, с кулером",
             Specs:       json.RawMessage(`{"socket":"AM4","cores":6,"threads":12,"frequency":"до 4.4 ГГц","cache":"35 MB"}`),
             CategoryID:  catMap["Processors"],
+            Socket:      "AM4",
+            TDP:         65,
+            RamType:     "DDR4",
         },
+
+        // ==================== Видеокарты ====================
         {
             Name:        "NVIDIA RTX 4060 Ti",
             Price:       38990,
@@ -153,6 +179,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Видеокарта NVIDIA GeForce RTX 4060 Ti 8GB GDDR6",
             Specs:       json.RawMessage(`{"memory":"8 GB GDDR6","interface":"PCIe 4.0","ports":"HDMI 2.1, DisplayPort 1.4a","power":"160 W"}`),
             CategoryID:  catMap["Video_cards"],
+            Power:       160,
         },
         {
             Name:        "AMD Radeon RX 7800 XT",
@@ -162,6 +189,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Видеокарта AMD Radeon RX 7800 XT 16GB GDDR6",
             Specs:       json.RawMessage(`{"memory":"16 GB GDDR6","interface":"PCIe 4.0","ports":"HDMI 2.1, DisplayPort 2.1","power":"263 W"}`),
             CategoryID:  catMap["Video_cards"],
+            Power:       263,
         },
         {
             Name:        "NVIDIA RTX 4070 Ti",
@@ -171,6 +199,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Видеокарта NVIDIA GeForce RTX 4070 Ti 12GB GDDR6X",
             Specs:       json.RawMessage(`{"memory":"12 GB GDDR6X","interface":"PCIe 4.0","ports":"HDMI 2.1, DisplayPort 1.4a","power":"285 W"}`),
             CategoryID:  catMap["Video_cards"],
+            Power:       285,
         },
         {
             Name:        "AMD Radeon RX 7700 XT",
@@ -180,6 +209,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Видеокарта AMD Radeon RX 7700 XT 12GB GDDR6",
             Specs:       json.RawMessage(`{"memory":"12 GB GDDR6","interface":"PCIe 4.0","ports":"HDMI 2.1, DisplayPort 2.1","power":"245 W"}`),
             CategoryID:  catMap["Video_cards"],
+            Power:       245,
         },
         {
             Name:        "NVIDIA RTX 3060 Ti",
@@ -189,6 +219,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Видеокарта NVIDIA GeForce RTX 3060 Ti 8GB GDDR6",
             Specs:       json.RawMessage(`{"memory":"8 GB GDDR6","interface":"PCIe 4.0","ports":"HDMI 2.1, DisplayPort 1.4a","power":"200 W"}`),
             CategoryID:  catMap["Video_cards"],
+            Power:       200,
         },
         {
             Name:        "AMD Radeon RX 6750 XT",
@@ -198,6 +229,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Видеокарта AMD Radeon RX 6750 XT 12GB GDDR6",
             Specs:       json.RawMessage(`{"memory":"12 GB GDDR6","interface":"PCIe 4.0","ports":"HDMI 2.1, DisplayPort 1.4a","power":"250 W"}`),
             CategoryID:  catMap["Video_cards"],
+            Power:       250,
         },
         {
             Name:        "NVIDIA RTX 4090",
@@ -207,6 +239,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Видеокарта NVIDIA GeForce RTX 4090 24GB GDDR6X",
             Specs:       json.RawMessage(`{"memory":"24 GB GDDR6X","interface":"PCIe 4.0","ports":"HDMI 2.1, DisplayPort 1.4a","power":"450 W"}`),
             CategoryID:  catMap["Video_cards"],
+            Power:       450,
         },
         {
             Name:        "AMD Radeon RX 7900 XT",
@@ -216,6 +249,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Видеокарта AMD Radeon RX 7900 XT 20GB GDDR6",
             Specs:       json.RawMessage(`{"memory":"20 GB GDDR6","interface":"PCIe 4.0","ports":"HDMI 2.1, DisplayPort 2.1","power":"300 W"}`),
             CategoryID:  catMap["Video_cards"],
+            Power:       300,
         },
         {
             Name:        "NVIDIA RTX 3050",
@@ -225,6 +259,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Видеокарта NVIDIA GeForce RTX 3050 8GB GDDR6",
             Specs:       json.RawMessage(`{"memory":"8 GB GDDR6","interface":"PCIe 4.0","ports":"HDMI 2.1, DisplayPort 1.4a","power":"130 W"}`),
             CategoryID:  catMap["Video_cards"],
+            Power:       130,
         },
         {
             Name:        "AMD Radeon RX 6600",
@@ -234,7 +269,10 @@ func seedProducts(db *gorm.DB) {
             Description: "Видеокарта AMD Radeon RX 6600 8GB GDDR6",
             Specs:       json.RawMessage(`{"memory":"8 GB GDDR6","interface":"PCIe 4.0","ports":"HDMI 2.1, DisplayPort 1.4a","power":"132 W"}`),
             CategoryID:  catMap["Video_cards"],
+            Power:       132,
         },
+
+        // ==================== Оперативная память ====================
         {
             Name:        "Kingston Fury 16GB DDR4",
             Price:       4990,
@@ -243,6 +281,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Оперативная память Kingston Fury Beast 16GB DDR4-3200",
             Specs:       json.RawMessage(`{"capacity":"16 GB (1x16)","type":"DDR4","frequency":"3200 MHz","timings":"CL16"}`),
             CategoryID:  catMap["RAM"],
+            RamType:     "DDR4",
         },
         {
             Name:        "Corsair Vengeance 32GB DDR5",
@@ -252,6 +291,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Оперативная память Corsair Vengeance 32GB DDR5-5600",
             Specs:       json.RawMessage(`{"capacity":"32 GB (2x16)","type":"DDR5","frequency":"5600 MHz","timings":"CL36"}`),
             CategoryID:  catMap["RAM"],
+            RamType:     "DDR5",
         },
         {
             Name:        "Samsung 16GB DDR4",
@@ -261,6 +301,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Оперативная память Samsung 16GB DDR4-2666",
             Specs:       json.RawMessage(`{"capacity":"16 GB (1x16)","type":"DDR4","frequency":"2666 MHz","timings":"CL19"}`),
             CategoryID:  catMap["RAM"],
+            RamType:     "DDR4",
         },
         {
             Name:        "G.Skill Trident Z 32GB DDR4",
@@ -270,6 +311,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Оперативная память G.Skill Trident Z RGB 32GB DDR4-3600",
             Specs:       json.RawMessage(`{"capacity":"32 GB (2x16)","type":"DDR4","frequency":"3600 MHz","timings":"CL18"}`),
             CategoryID:  catMap["RAM"],
+            RamType:     "DDR4",
         },
         {
             Name:        "Kingston Fury 32GB DDR5",
@@ -279,6 +321,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Оперативная память Kingston Fury Beast 32GB DDR5-5200",
             Specs:       json.RawMessage(`{"capacity":"32 GB (2x16)","type":"DDR5","frequency":"5200 MHz","timings":"CL40"}`),
             CategoryID:  catMap["RAM"],
+            RamType:     "DDR5",
         },
         {
             Name:        "Corsair Vengeance LPX 16GB DDR4",
@@ -288,6 +331,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Оперативная память Corsair Vengeance LPX 16GB DDR4-3200",
             Specs:       json.RawMessage(`{"capacity":"16 GB (2x8)","type":"DDR4","frequency":"3200 MHz","timings":"CL16"}`),
             CategoryID:  catMap["RAM"],
+            RamType:     "DDR4",
         },
         {
             Name:        "ADATA XPG 32GB DDR4",
@@ -297,6 +341,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Оперативная память ADATA XPG Gammix D30 32GB DDR4-3200",
             Specs:       json.RawMessage(`{"capacity":"32 GB (2x16)","type":"DDR4","frequency":"3200 MHz","timings":"CL16"}`),
             CategoryID:  catMap["RAM"],
+            RamType:     "DDR4",
         },
         {
             Name:        "Team Group 16GB DDR4",
@@ -306,6 +351,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Оперативная память Team Group T-Force Delta 16GB DDR4-3200",
             Specs:       json.RawMessage(`{"capacity":"16 GB (2x8)","type":"DDR4","frequency":"3200 MHz","timings":"CL16"}`),
             CategoryID:  catMap["RAM"],
+            RamType:     "DDR4",
         },
         {
             Name:        "G.Skill Trident Z5 64GB DDR5",
@@ -315,6 +361,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Оперативная память G.Skill Trident Z5 RGB 64GB DDR5-6000",
             Specs:       json.RawMessage(`{"capacity":"64 GB (2x32)","type":"DDR5","frequency":"6000 MHz","timings":"CL30"}`),
             CategoryID:  catMap["RAM"],
+            RamType:     "DDR5",
         },
         {
             Name:        "Kingston Fury 64GB DDR5",
@@ -324,7 +371,10 @@ func seedProducts(db *gorm.DB) {
             Description: "Оперативная память Kingston Fury Beast 64GB DDR5-5600",
             Specs:       json.RawMessage(`{"capacity":"64 GB (2x32)","type":"DDR5","frequency":"5600 MHz","timings":"CL40"}`),
             CategoryID:  catMap["RAM"],
+            RamType:     "DDR5",
         },
+
+        // ==================== SSD ====================
         {
             Name:        "Samsung 980 Pro 1TB",
             Price:       7990,
@@ -415,6 +465,8 @@ func seedProducts(db *gorm.DB) {
             Specs:       json.RawMessage(`{"capacity":"1 TB","interface":"NVMe PCIe 4.0","read_speed":"5150 MB/s","write_speed":"4900 MB/s"}`),
             CategoryID:  catMap["SSD"],
         },
+
+        // ==================== Материнские платы ====================
         {
             Name:        "ASUS ROG STRIX B760",
             Price:       18990,
@@ -423,6 +475,9 @@ func seedProducts(db *gorm.DB) {
             Description: "Материнская плата ASUS ROG STRIX B760-F GAMING WIFI",
             Specs:       json.RawMessage(`{"socket":"LGA 1700","chipset":"Intel B760","memory_slots":4,"max_memory":"128 GB DDR5","form_factor":"ATX"}`),
             CategoryID:  catMap["Motherboards"],
+            Socket:      "LGA 1700",
+            RamType:     "DDR5",
+            FormFactor:  "ATX",
         },
         {
             Name:        "MSI MPG Z790 CARBON",
@@ -432,6 +487,9 @@ func seedProducts(db *gorm.DB) {
             Description: "Материнская плата MSI MPG Z790 CARBON WIFI",
             Specs:       json.RawMessage(`{"socket":"LGA 1700","chipset":"Intel Z790","memory_slots":4,"max_memory":"256 GB DDR5","form_factor":"ATX"}`),
             CategoryID:  catMap["Motherboards"],
+            Socket:      "LGA 1700",
+            RamType:     "DDR5",
+            FormFactor:  "ATX",
         },
         {
             Name:        "Gigabyte B550 AORUS PRO",
@@ -441,6 +499,9 @@ func seedProducts(db *gorm.DB) {
             Description: "Материнская плата Gigabyte B550 AORUS PRO AC",
             Specs:       json.RawMessage(`{"socket":"AM4","chipset":"AMD B550","memory_slots":4,"max_memory":"128 GB DDR4","form_factor":"ATX"}`),
             CategoryID:  catMap["Motherboards"],
+            Socket:      "AM4",
+            RamType:     "DDR4",
+            FormFactor:  "ATX",
         },
         {
             Name:        "ASRock B760M Steel Legend",
@@ -450,6 +511,9 @@ func seedProducts(db *gorm.DB) {
             Description: "Материнская плата ASRock B760M Steel Legend WiFi",
             Specs:       json.RawMessage(`{"socket":"LGA 1700","chipset":"Intel B760","memory_slots":4,"max_memory":"128 GB DDR5","form_factor":"Micro-ATX"}`),
             CategoryID:  catMap["Motherboards"],
+            Socket:      "LGA 1700",
+            RamType:     "DDR5",
+            FormFactor:  "Micro-ATX",
         },
         {
             Name:        "MSI MAG B650 TOMAHAWK",
@@ -459,6 +523,9 @@ func seedProducts(db *gorm.DB) {
             Description: "Материнская плата MSI MAG B650 TOMAHAWK WIFI",
             Specs:       json.RawMessage(`{"socket":"AM5","chipset":"AMD B650","memory_slots":4,"max_memory":"192 GB DDR5","form_factor":"ATX"}`),
             CategoryID:  catMap["Motherboards"],
+            Socket:      "AM5",
+            RamType:     "DDR5",
+            FormFactor:  "ATX",
         },
         {
             Name:        "ASUS TUF GAMING Z790-PLUS",
@@ -468,6 +535,9 @@ func seedProducts(db *gorm.DB) {
             Description: "Материнская плата ASUS TUF GAMING Z790-PLUS WIFI",
             Specs:       json.RawMessage(`{"socket":"LGA 1700","chipset":"Intel Z790","memory_slots":4,"max_memory":"128 GB DDR5","form_factor":"ATX"}`),
             CategoryID:  catMap["Motherboards"],
+            Socket:      "LGA 1700",
+            RamType:     "DDR5",
+            FormFactor:  "ATX",
         },
         {
             Name:        "Gigabyte Z790 AORUS ELITE",
@@ -477,6 +547,9 @@ func seedProducts(db *gorm.DB) {
             Description: "Материнская плата Gigabyte Z790 AORUS ELITE AX",
             Specs:       json.RawMessage(`{"socket":"LGA 1700","chipset":"Intel Z790","memory_slots":4,"max_memory":"192 GB DDR5","form_factor":"ATX"}`),
             CategoryID:  catMap["Motherboards"],
+            Socket:      "LGA 1700",
+            RamType:     "DDR5",
+            FormFactor:  "ATX",
         },
         {
             Name:        "ASRock X670E Steel Legend",
@@ -486,6 +559,9 @@ func seedProducts(db *gorm.DB) {
             Description: "Материнская плата ASRock X670E Steel Legend",
             Specs:       json.RawMessage(`{"socket":"AM5","chipset":"AMD X670E","memory_slots":4,"max_memory":"192 GB DDR5","form_factor":"ATX"}`),
             CategoryID:  catMap["Motherboards"],
+            Socket:      "AM5",
+            RamType:     "DDR5",
+            FormFactor:  "ATX",
         },
         {
             Name:        "MSI PRO B760-P",
@@ -495,6 +571,9 @@ func seedProducts(db *gorm.DB) {
             Description: "Материнская плата MSI PRO B760-P WIFI",
             Specs:       json.RawMessage(`{"socket":"LGA 1700","chipset":"Intel B760","memory_slots":4,"max_memory":"128 GB DDR5","form_factor":"ATX"}`),
             CategoryID:  catMap["Motherboards"],
+            Socket:      "LGA 1700",
+            RamType:     "DDR5",
+            FormFactor:  "ATX",
         },
         {
             Name:        "ASUS PRIME B760-PLUS",
@@ -504,7 +583,12 @@ func seedProducts(db *gorm.DB) {
             Description: "Материнская плата ASUS PRIME B760-PLUS",
             Specs:       json.RawMessage(`{"socket":"LGA 1700","chipset":"Intel B760","memory_slots":4,"max_memory":"128 GB DDR5","form_factor":"ATX"}`),
             CategoryID:  catMap["Motherboards"],
+            Socket:      "LGA 1700",
+            RamType:     "DDR5",
+            FormFactor:  "ATX",
         },
+
+        // ==================== Блоки питания ====================
         {
             Name:        "Corsair RM850x 850W",
             Price:       12990,
@@ -513,6 +597,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Блок питания Corsair RM850x 850W 80+ Gold",
             Specs:       json.RawMessage(`{"power":"850 W","certificate":"80+ Gold","modular":"Полностью модульный","fan":"135 mm"}`),
             CategoryID:  catMap["Power_supplies"],
+            Power:       850,
         },
         {
             Name:        "be quiet! Straight Power 11 1000W",
@@ -522,6 +607,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Блок питания be quiet! Straight Power 11 1500W 80+ Platinum",
             Specs:       json.RawMessage(`{"power":"1500 W","certificate":"80+ Platinum","modular":"Полностью модульный","fan":"135 mm"}`),
             CategoryID:  catMap["Power_supplies"],
+            Power:       1500,
         },
         {
             Name:        "SeaSonic Focus PX 850W",
@@ -531,6 +617,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Блок питания SeaSonic Focus PX 850W 80+ Platinum",
             Specs:       json.RawMessage(`{"power":"850 W","certificate":"80+ Platinum","modular":"Полностью модульный","fan":"120 mm"}`),
             CategoryID:  catMap["Power_supplies"],
+            Power:       850,
         },
         {
             Name:        "Cooler Master MWE 750W",
@@ -540,6 +627,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Блок питания Cooler Master MWE 750W 80+ Bronze",
             Specs:       json.RawMessage(`{"power":"750 W","certificate":"80+ Bronze","modular":"Нет","fan":"120 mm"}`),
             CategoryID:  catMap["Power_supplies"],
+            Power:       750,
         },
         {
             Name:        "be quiet! Pure Power 12 750W",
@@ -549,6 +637,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Блок питания be quiet! Pure Power 12 750W 80+ Gold",
             Specs:       json.RawMessage(`{"power":"750 W","certificate":"80+ Gold","modular":"Частично модульный","fan":"120 mm"}`),
             CategoryID:  catMap["Power_supplies"],
+            Power:       750,
         },
         {
             Name:        "DeepCool PQ1000M 1000W",
@@ -558,6 +647,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Блок питания DeepCool PQ1000M 1000W 80+ Gold",
             Specs:       json.RawMessage(`{"power":"1000 W","certificate":"80+ Gold","modular":"Полностью модульный","fan":"135 mm"}`),
             CategoryID:  catMap["Power_supplies"],
+            Power:       1000,
         },
         {
             Name:        "Chieftec Polaris 850W",
@@ -567,6 +657,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Блок питания Chieftec Polaris 850W 80+ Gold",
             Specs:       json.RawMessage(`{"power":"850 W","certificate":"80+ Gold","modular":"Полностью модульный","fan":"140 mm"}`),
             CategoryID:  catMap["Power_supplies"],
+            Power:       850,
         },
         {
             Name:        "Cougar GEX 850W",
@@ -576,6 +667,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Блок питания Cougar GEX 850W 80+ Gold",
             Specs:       json.RawMessage(`{"power":"850 W","certificate":"80+ Gold","modular":"Полностью модульный","fan":"120 mm"}`),
             CategoryID:  catMap["Power_supplies"],
+            Power:       850,
         },
         {
             Name:        "Aerocool VX 750W",
@@ -585,7 +677,10 @@ func seedProducts(db *gorm.DB) {
             Description: "Блок питания Aerocool VX 750W 80+",
             Specs:       json.RawMessage(`{"power":"750 W","certificate":"80+","modular":"Нет","fan":"120 mm"}`),
             CategoryID:  catMap["Power_supplies"],
+            Power:       750,
         },
+
+        // ==================== Корпусы ====================
         {
             Name:        "NZXT H7 Flow",
             Price:       11990,
@@ -594,6 +689,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Корпус NZXT H7 Flow White, Midi-Tower",
             Specs:       json.RawMessage(`{"form_factor":"Midi-Tower","motherboard":"E-ATX, ATX, Micro-ATX, Mini-ITX","max_gpu_length":"400 mm","max_cooler_height":"185 mm"}`),
             CategoryID:  catMap["Buildings"],
+            FormFactor:  "ATX",
         },
         {
             Name:        "Corsair 4000D Airflow",
@@ -603,6 +699,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Корпус Corsair 4000D Airflow Black, Midi-Tower",
             Specs:       json.RawMessage(`{"form_factor":"Midi-Tower","motherboard":"ATX, Micro-ATX, Mini-ITX","max_gpu_length":"360 mm","max_cooler_height":"170 mm"}`),
             CategoryID:  catMap["Buildings"],
+            FormFactor:  "ATX",
         },
         {
             Name:        "be quiet! Pure Base 500DX",
@@ -612,6 +709,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Корпус be quiet! Pure Base 500DX Black, Midi-Tower",
             Specs:       json.RawMessage(`{"form_factor":"Midi-Tower","motherboard":"ATX, Micro-ATX, Mini-ITX","max_gpu_length":"369 mm","max_cooler_height":"190 mm"}`),
             CategoryID:  catMap["Buildings"],
+            FormFactor:  "ATX",
         },
         {
             Name:        "DeepCool CK560",
@@ -621,6 +719,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Корпус DeepCool CK560 Black, Midi-Tower",
             Specs:       json.RawMessage(`{"form_factor":"Midi-Tower","motherboard":"ATX, Micro-ATX, Mini-ITX","max_gpu_length":"380 mm","max_cooler_height":"175 mm"}`),
             CategoryID:  catMap["Buildings"],
+            FormFactor:  "ATX",
         },
         {
             Name:        "Lian Li Lancool 216",
@@ -630,6 +729,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Корпус Lian Li Lancool 216 Black, Midi-Tower",
             Specs:       json.RawMessage(`{"form_factor":"Midi-Tower","motherboard":"ATX, Micro-ATX, Mini-ITX","max_gpu_length":"392 mm","max_cooler_height":"180 mm"}`),
             CategoryID:  catMap["Buildings"],
+            FormFactor:  "ATX",
         },
         {
             Name:        "Fractal Design Pop Air",
@@ -639,6 +739,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Корпус Fractal Design Pop Air Black, Midi-Tower",
             Specs:       json.RawMessage(`{"form_factor":"Midi-Tower","motherboard":"ATX, Micro-ATX, Mini-ITX","max_gpu_length":"405 mm","max_cooler_height":"170 mm"}`),
             CategoryID:  catMap["Buildings"],
+            FormFactor:  "ATX",
         },
         {
             Name:        "Zalman i3",
@@ -648,6 +749,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Корпус Zalman i3 Black, Midi-Tower",
             Specs:       json.RawMessage(`{"form_factor":"Midi-Tower","motherboard":"ATX, Micro-ATX, Mini-ITX","max_gpu_length":"320 mm","max_cooler_height":"160 mm"}`),
             CategoryID:  catMap["Buildings"],
+            FormFactor:  "ATX",
         },
         {
             Name:        "Cooler Master MasterBox MB520",
@@ -657,6 +759,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Корпус Cooler Master MasterBox MB520 RGB, Midi-Tower",
             Specs:       json.RawMessage(`{"form_factor":"Midi-Tower","motherboard":"ATX, Micro-ATX, Mini-ITX","max_gpu_length":"410 mm","max_cooler_height":"165 mm"}`),
             CategoryID:  catMap["Buildings"],
+            FormFactor:  "ATX",
         },
         {
             Name:        "Chieftec Steel",
@@ -666,6 +769,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Корпус Chieftec Steel SC-01B, Midi-Tower",
             Specs:       json.RawMessage(`{"form_factor":"Midi-Tower","motherboard":"ATX, Micro-ATX, Mini-ITX","max_gpu_length":"350 mm","max_cooler_height":"150 mm"}`),
             CategoryID:  catMap["Buildings"],
+            FormFactor:  "ATX",
         },
         {
             Name:        "AeroCool Cylon",
@@ -675,6 +779,7 @@ func seedProducts(db *gorm.DB) {
             Description: "Корпус AeroCool Cylon Black, Midi-Tower",
             Specs:       json.RawMessage(`{"form_factor":"Midi-Tower","motherboard":"ATX, Micro-ATX, Mini-ITX","max_gpu_length":"365 mm","max_cooler_height":"155 mm"}`),
             CategoryID:  catMap["Buildings"],
+            FormFactor:  "ATX",
         },
         {
             Name:        "MSI G274QPF 27 165Hz",

@@ -11,6 +11,7 @@ import ProfilePage from "../components/ProfilePage.vue";
 import CheckoutPage from "../components/CheckoutPage.vue";
 import OrderSuccessPage from "../components/OrderSuccessPage.vue";
 import OrdersPage from "../components/OrdersPage.vue";
+import PcBuilderPage from "../components/PcBuilderPage.vue";
 
 axios.defaults.withCredentials = true;
 
@@ -33,7 +34,7 @@ const routes = [
     component: ProfilePage,
     meta: { requiresAuth: true },
   },
-
+  { path: "/pc-builder", name: "PcBuilder", component: PcBuilderPage },
   {
     path: "/checkout",
     name: "Checkout",
