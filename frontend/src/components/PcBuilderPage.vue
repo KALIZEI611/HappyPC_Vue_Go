@@ -59,7 +59,6 @@
             </button>
           </div>
 
-          <!-- Кнопка сохранения сборки -->
           <div class="save-build-section">
             <button
               v-if="!showSaveForm"
@@ -180,11 +179,9 @@ const saveBuild = async () => {
 
     alert("Сборка сохранена!");
 
-    // Очищаем форму сохранения
     showSaveForm.value = false;
     buildName.value = "";
 
-    // Очищаем сборку на странице
     selected.value = {
       cpu: null,
       gpu: null,
@@ -196,10 +193,8 @@ const saveBuild = async () => {
       case: null,
     };
 
-    // Очищаем localStorage
     localStorage.removeItem("pcBuilderBuild");
 
-    // Обновляем совместимость
     updateCompatibility();
   } catch (err) {
     console.error("Ошибка сохранения сборки:", err);
@@ -386,7 +381,13 @@ onMounted(async () => {
       selected.value[returnKey] = product;
       sessionStorage.removeItem("pcBuilderReturnKey");
       router.replace("/pc-builder");
+      updateCompatibility();
     }
+  }
+
+  const savedBuild = loadSavedBuild();
+  if (Object.keys(savedBuild).length > 0) {
+    selected.value = savedBuild;
     updateCompatibility();
   }
 

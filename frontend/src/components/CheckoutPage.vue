@@ -388,7 +388,9 @@ const submitOrder = async () => {
     });
 
     const orderId = response.data.id;
+
     emit("cart-cleared");
+
     router.push({ path: "/order-success", query: { order_id: orderId } });
   } catch (err) {
     const message = err.response?.data || "Ошибка оформления заказа";
