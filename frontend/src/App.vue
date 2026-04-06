@@ -8,6 +8,7 @@
         @add-to-cart="addToCart"
         @update-cart="updateCart"
         @remove-from-cart="removeFromCart"
+        @add-to-build="handleAddToBuild"
         @cart-cleared="handleCartCleared"
       />
     </main>
@@ -47,6 +48,16 @@ const fetchCart = async () => {
   }
 };
 
+const handleAddToBuild = (product) => {
+  const returnKey = sessionStorage.getItem("pcBuilderReturnKey");
+  if (returnKey) {
+    router.push(`/pc-builder?product_id=${product.id}`);
+  } else {
+    console.log("Режим выбора компонента не активен");
+    alert("Сначала выберите компонент для замены на странице сборки ПК");
+  }
+};
+
 const addToCart = async (product) => {
   if (!user.value) {
     router.push("/login");
@@ -61,6 +72,7 @@ const addToCart = async (product) => {
 };
 
 const handleCartCleared = async () => {
+  cart.value = [];
   await fetchCart();
 };
 

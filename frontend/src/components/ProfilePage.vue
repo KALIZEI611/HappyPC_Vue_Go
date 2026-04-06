@@ -246,7 +246,6 @@ const deleteBuild = async (buildId) => {
 };
 
 const loadBuild = async (components) => {
-  // Загружаем все товары из кэша
   let allProducts = allProductsCache.get();
   if (!allProducts) {
     try {
@@ -268,12 +267,10 @@ const loadBuild = async (components) => {
   const buildToLoad = {};
   for (const [type, comp] of Object.entries(components)) {
     if (comp && comp.id) {
-      // Ищем полный объект товара по ID
       const fullProduct = allProducts.find((p) => p.id === comp.id);
       if (fullProduct) {
         buildToLoad[type] = fullProduct;
       } else {
-        // Если не нашли, используем сохранённые данные
         buildToLoad[type] = comp;
       }
     }

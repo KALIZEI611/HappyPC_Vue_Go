@@ -18,14 +18,12 @@
       </div>
       <div class="product-price">{{ product.price.toLocaleString() }} ₽</div>
 
-      <!-- Режим сборки ПК: показываем кнопку "В сборку" -->
       <div v-if="isBuilderMode">
         <button @click.stop="addToBuild" class="add-to-build-btn">
           <i class="fas fa-tools"></i> В сборку
         </button>
       </div>
 
-      <!-- Обычный режим: показываем управление корзиной -->
       <div v-else>
         <div v-if="quantity > 0" class="quantity-controls" @click.stop>
           <button @click="decrement" class="qty-btn">

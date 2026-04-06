@@ -48,7 +48,6 @@ func (h *BuildHandler) SaveBuild(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Сериализуем компоненты в JSON
     componentsJSON, err := json.Marshal(req.Components)
     if err != nil {
         http.Error(w, "Failed to serialize components", http.StatusInternalServerError)
@@ -86,7 +85,6 @@ func (h *BuildHandler) GetUserBuilds(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Преобразуем Components из json.RawMessage в map для ответа
     type buildResponse struct {
         ID         uint                   `json:"id"`
         CreatedAt  time.Time              `json:"created_at"`

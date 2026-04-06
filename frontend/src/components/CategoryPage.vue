@@ -31,11 +31,7 @@
         <aside class="filter-sidebar">
           <div class="filter-header">
             <h3>Фильтры</h3>
-            <button
-              v-if="hasActiveFilters"
-              @click="resetFilters"
-              class="reset-filters"
-            >
+            <button v-if="hasActiveFilters" @click="resetFilters" class="reset-filters">
               <i class="fas fa-times"></i> Сбросить
             </button>
           </div>
@@ -60,19 +56,42 @@
             </div>
           </div>
 
+          <div class="filter-section" v-if="availableSockets.length > 0">
+            <h4>Сокет</h4>
+            <div class="socket-list">
+              <label
+                v-for="socket in availableSockets"
+                :key="socket"
+                class="socket-checkbox"
+              >
+                <input type="checkbox" :value="socket" v-model="filters.sockets" />
+                {{ socket }}
+              </label>
+            </div>
+          </div>
+
+          <div
+            class="filter-section"
+            v-if="availableRamTypes.length > 0 && category?.id !== 1"
+          >
+            <h4>Тип памяти</h4>
+            <div class="ramtype-list">
+              <label
+                v-for="ramType in availableRamTypes"
+                :key="ramType"
+                class="ramtype-checkbox"
+              >
+                <input type="checkbox" :value="ramType" v-model="filters.ramTypes" />
+                {{ ramType }}
+              </label>
+            </div>
+          </div>
+
           <div class="filter-section">
             <h4>Бренд</h4>
             <div class="brand-list">
-              <label
-                v-for="brand in availableBrands"
-                :key="brand"
-                class="brand-checkbox"
-              >
-                <input
-                  type="checkbox"
-                  :value="brand"
-                  v-model="filters.brands"
-                />
+              <label v-for="brand in availableBrands" :key="brand" class="brand-checkbox">
+                <input type="checkbox" :value="brand" v-model="filters.brands" />
                 {{ brand }}
               </label>
             </div>
@@ -99,17 +118,35 @@
             <div class="filter-section">
               <h4>Цена, ₽</h4>
               <div class="price-inputs">
-                <input
-                  type="number"
-                  v-model.number="filters.priceMin"
-                  placeholder="от"
-                />
+                <input type="number" v-model.number="filters.priceMin" placeholder="от" />
                 <span>—</span>
-                <input
-                  type="number"
-                  v-model.number="filters.priceMax"
-                  placeholder="до"
-                />
+                <input type="number" v-model.number="filters.priceMax" placeholder="до" />
+              </div>
+            </div>
+            <div class="filter-section" v-if="availableSockets.length > 0">
+              <h4>Сокет</h4>
+              <div class="socket-list">
+                <label
+                  v-for="socket in availableSockets"
+                  :key="socket"
+                  class="socket-checkbox"
+                >
+                  <input type="checkbox" :value="socket" v-model="filters.sockets" />
+                  {{ socket }}
+                </label>
+              </div>
+            </div>
+            <div class="filter-section" v-if="availableRamTypes.length > 0">
+              <h4>Тип памяти</h4>
+              <div class="ramtype-list">
+                <label
+                  v-for="ramType in availableRamTypes"
+                  :key="ramType"
+                  class="ramtype-checkbox"
+                >
+                  <input type="checkbox" :value="ramType" v-model="filters.ramTypes" />
+                  {{ ramType }}
+                </label>
               </div>
             </div>
             <div class="filter-section">
@@ -120,11 +157,7 @@
                   :key="brand"
                   class="brand-checkbox"
                 >
-                  <input
-                    type="checkbox"
-                    :value="brand"
-                    v-model="filters.brands"
-                  />
+                  <input type="checkbox" :value="brand" v-model="filters.brands" />
                   {{ brand }}
                 </label>
               </div>
@@ -137,11 +170,7 @@
                 <option :value="4.5">4.5 и выше</option>
               </select>
             </div>
-            <button
-              v-if="hasActiveFilters"
-              @click="resetFilters"
-              class="reset-filters"
-            >
+            <button v-if="hasActiveFilters" @click="resetFilters" class="reset-filters">
               Сбросить фильтры
             </button>
             <button @click="showMobileFilters = false" class="apply-filters">
@@ -153,8 +182,7 @@
         <section class="products-section">
           <div class="products-header">
             <div class="results-info">
-              Показано {{ filteredProducts.length }} из
-              {{ products.length }} товаров
+              Показано {{ filteredProducts.length }} из {{ products.length }} товаров
             </div>
             <div class="sort-selector">
               <label for="sort">Сортировка:</label>
@@ -183,7 +211,7 @@
               @update-cart="
                 (productId, newQty) => $emit('update-cart', productId, newQty)
               "
-              @add-to-build="handleAddToBuild"
+              @add-to-build="$emit('add-to-build', $event)"
             />
           </div>
         </section>
@@ -194,18 +222,17 @@
 
 <script setup>
 import { ref, computed, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import axios from "axios";
 import ProductCard from "./ProductCard.vue";
 import { categoryProductsCache } from "../utils/cache";
 import { useBreadcrumbs } from "../composables/useBreadcrumbs";
 
 const route = useRoute();
-const router = useRouter();
 const props = defineProps({
   cart: { type: Array, required: true },
 });
-const emit = defineEmits(["add-to-cart", "update-cart"]);
+const emit = defineEmits(["add-to-cart", "update-cart", "add-to-build"]);
 
 const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -218,6 +245,8 @@ const filters = ref({
   priceMin: null,
   priceMax: null,
   brands: [],
+  sockets: [],
+  ramTypes: [],
   minRating: 0,
 });
 const showMobileFilters = ref(false);
@@ -274,25 +303,24 @@ watch(
   (newId) => {
     fetchCategoryData(newId);
   },
-  { immediate: true },
+  { immediate: true }
 );
 
-const handleAddToBuild = (product) => {
-  const returnKey = sessionStorage.getItem("pcBuilderReturnKey");
-  if (returnKey) {
-    router.push(`/pc-builder?product_id=${product.id}`);
-  } else {
-    console.log("Режим не активен");
-  }
-};
+const availableSockets = computed(() => {
+  const sockets = products.value.filter((p) => p.socket).map((p) => p.socket);
+  return [...new Set(sockets)].sort();
+});
+
+const availableRamTypes = computed(() => {
+  const ramTypes = products.value.filter((p) => p.ram_type).map((p) => p.ram_type);
+  return [...new Set(ramTypes)].sort();
+});
 
 const priceMin = computed(() =>
-  products.value.length ? Math.min(...products.value.map((p) => p.price)) : 0,
+  products.value.length ? Math.min(...products.value.map((p) => p.price)) : 0
 );
 const priceMax = computed(() =>
-  products.value.length
-    ? Math.max(...products.value.map((p) => p.price))
-    : 100000,
+  products.value.length ? Math.max(...products.value.map((p) => p.price)) : 100000
 );
 const availableBrands = computed(() => {
   const brands = products.value.map((p) => p.name.split(" ")[0]);
@@ -303,23 +331,40 @@ const hasActiveFilters = computed(() => {
     filters.value.priceMin !== null ||
     filters.value.priceMax !== null ||
     filters.value.brands.length > 0 ||
+    filters.value.sockets.length > 0 ||
+    filters.value.ramTypes.length > 0 ||
     filters.value.minRating > 0
   );
 });
 
 const filteredProducts = computed(() => {
   let filtered = [...products.value];
+
   if (filters.value.priceMin !== null && !isNaN(filters.value.priceMin)) {
     filtered = filtered.filter((p) => p.price >= filters.value.priceMin);
   }
   if (filters.value.priceMax !== null && !isNaN(filters.value.priceMax)) {
     filtered = filtered.filter((p) => p.price <= filters.value.priceMax);
   }
+
   if (filters.value.brands.length > 0) {
     filtered = filtered.filter((p) =>
-      filters.value.brands.includes(p.name.split(" ")[0]),
+      filters.value.brands.includes(p.name.split(" ")[0])
     );
   }
+
+  if (filters.value.sockets.length > 0) {
+    filtered = filtered.filter(
+      (p) => p.socket && filters.value.sockets.includes(p.socket)
+    );
+  }
+
+  if (filters.value.ramTypes.length > 0) {
+    filtered = filtered.filter(
+      (p) => p.ram_type && filters.value.ramTypes.includes(p.ram_type)
+    );
+  }
+
   if (filters.value.minRating > 0) {
     filtered = filtered.filter((p) => p.rating >= filters.value.minRating);
   }
@@ -346,6 +391,8 @@ const resetFilters = () => {
     priceMin: null,
     priceMax: null,
     brands: [],
+    sockets: [],
+    ramTypes: [],
     minRating: 0,
   };
 };
@@ -396,6 +443,30 @@ const resetFilters = () => {
 .category-count {
   color: #666;
   font-size: 1.1rem;
+}
+.socket-list,
+.ramtype-list {
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.socket-checkbox,
+.ramtype-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #666;
+}
+
+.socket-checkbox input[type="checkbox"],
+.ramtype-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
 }
 .loading-state,
 .error-state {
