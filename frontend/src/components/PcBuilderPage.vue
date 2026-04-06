@@ -2,24 +2,15 @@
   <div class="pc-builder-page">
     <div class="container">
       <h1>Сборка ПК</h1>
-      <p class="subtitle">
-        Выберите комплектующие – система проверит совместимость.
-      </p>
+      <p class="subtitle">Выберите комплектующие – система проверит совместимость.</p>
 
       <div v-if="loading" class="loading">Загрузка компонентов...</div>
       <div v-else class="builder-content">
         <div class="components-grid">
-          <div
-            v-for="comp in componentTypes"
-            :key="comp.key"
-            class="component-card"
-          >
+          <div v-for="comp in componentTypes" :key="comp.key" class="component-card">
             <h3>{{ comp.label }}</h3>
             <div v-if="selected[comp.key]" class="selected-item">
-              <img
-                :src="selected[comp.key].image"
-                :alt="selected[comp.key].name"
-              />
+              <img :src="selected[comp.key].image" :alt="selected[comp.key].name" />
               <div class="selected-info">
                 <span class="item-name">{{ selected[comp.key].name }}</span>
                 <span class="item-price"
@@ -36,10 +27,7 @@
             </div>
             <div v-else class="select-placeholder">
               <p>Не выбран</p>
-              <button
-                @click="goToCategory(comp.categoryId, comp.key)"
-                class="select-btn"
-              >
+              <button @click="goToCategory(comp.categoryId, comp.key)" class="select-btn">
                 Выбрать {{ comp.label.toLowerCase() }}
               </button>
             </div>
@@ -49,24 +37,60 @@
         <div class="compatibility-panel">
           <h3>Проверка совместимости</h3>
           <ul>
-            <li
-              v-for="(msg, idx) in compatibilityMessages"
-              :key="idx"
-              :class="msg.type"
-            >
+            <li v-for="(msg, idx) in compatibilityMessages" :key="idx" :class="msg.type">
               {{ msg.text }}
             </li>
           </ul>
           <div class="total-price">
             <strong>Итоговая цена:</strong> {{ totalPrice.toLocaleString() }} ₽
           </div>
-          <button
-            @click="addToCart"
-            :disabled="!isCompatible || totalPrice === 0"
-            class="add-to-cart-btn"
-          >
-            Добавить сборку в корзину
-          </button>
+
+          <div class="button-group">
+            <button
+              @click="addToCart"
+              :disabled="!isCompatible || totalPrice === 0"
+              class="add-to-cart-btn"
+            >
+              <i class="fas fa-shopping-cart"></i> Добавить сборку в корзину
+            </button>
+
+            <button @click="clearAll" class="clear-all-btn">
+              <i class="fas fa-trash-alt"></i> Очистить всё
+            </button>
+          </div>
+
+          <!-- Кнопка сохранения сборки -->
+          <div class="save-build-section">
+            <button
+              v-if="!showSaveForm"
+              @click="showSaveForm = true"
+              class="save-build-btn"
+            >
+              <i class="fas fa-save"></i> Сохранить сборку
+            </button>
+            <div v-else class="save-form">
+              <input
+                type="text"
+                v-model="buildName"
+                placeholder="Название сборки"
+                maxlength="50"
+                @keyup.enter="saveBuild"
+              />
+              <button @click="saveBuild" class="confirm-btn" title="Сохранить">
+                <i class="fas fa-check"></i>
+              </button>
+              <button
+                @click="
+                  showSaveForm = false;
+                  buildName = '';
+                "
+                class="cancel-btn"
+                title="Отмена"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -78,11 +102,14 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
 import { allProductsCache } from "../utils/cache";
+import { user } from "../utils/cache";
 
 const router = useRouter();
 const route = useRoute();
 const loading = ref(true);
 const allProducts = ref([]);
+const showSaveForm = ref(false);
+const buildName = ref("");
 
 const loadSavedBuild = () => {
   const saved = localStorage.getItem("pcBuilderBuild");
@@ -119,6 +146,91 @@ const totalPrice = computed(() => {
   }
   return sum;
 });
+
+const saveBuild = async () => {
+  if (!user.value) {
+    router.push("/login");
+    return;
+  }
+  if (!buildName.value.trim()) {
+    alert("Введите название сборки");
+    return;
+  }
+  if (totalPrice.value === 0) {
+    alert("Сборка пуста. Добавьте хотя бы один компонент.");
+    return;
+  }
+
+  try {
+    const componentsToSave = {};
+    for (const key in selected.value) {
+      if (selected.value[key]) {
+        componentsToSave[key] = {
+          id: selected.value[key].id,
+          name: selected.value[key].name,
+          price: selected.value[key].price,
+        };
+      }
+    }
+
+    await axios.post("/api/builds", {
+      name: buildName.value,
+      components: componentsToSave,
+    });
+
+    alert("Сборка сохранена!");
+
+    // Очищаем форму сохранения
+    showSaveForm.value = false;
+    buildName.value = "";
+
+    // Очищаем сборку на странице
+    selected.value = {
+      cpu: null,
+      gpu: null,
+      motherboard: null,
+      ram: null,
+      psu: null,
+      cooler: null,
+      storage: null,
+      case: null,
+    };
+
+    // Очищаем localStorage
+    localStorage.removeItem("pcBuilderBuild");
+
+    // Обновляем совместимость
+    updateCompatibility();
+  } catch (err) {
+    console.error("Ошибка сохранения сборки:", err);
+    alert("Не удалось сохранить сборку");
+  }
+};
+
+const clearAll = () => {
+  if (totalPrice.value === 0) {
+    alert("Сборка уже пуста");
+    return;
+  }
+
+  if (confirm("Вы уверены, что хотите очистить всю сборку?")) {
+    selected.value = {
+      cpu: null,
+      gpu: null,
+      motherboard: null,
+      ram: null,
+      psu: null,
+      cooler: null,
+      storage: null,
+      case: null,
+    };
+
+    localStorage.removeItem("pcBuilderBuild");
+    updateCompatibility();
+
+    alert("Сборка очищена");
+  }
+};
 
 const saveBuildToLocalStorage = () => {
   localStorage.setItem("pcBuilderBuild", JSON.stringify(selected.value));
@@ -184,7 +296,9 @@ const updateCompatibility = () => {
     } else if (totalPower > 0) {
       msgs.push({
         type: "success",
-        text: `Блок питания обеспечит достаточную мощность (запас ${psu.power - totalPower} Вт)`,
+        text: `Блок питания обеспечит достаточную мощность (запас ${
+          psu.power - totalPower
+        } Вт)`,
       });
     }
   } else if (totalPower > 0) {
@@ -197,12 +311,9 @@ const updateCompatibility = () => {
     if (mbForm && caseForm) {
       if (
         (mbForm === "atx" && caseForm === "atx") ||
-        (mbForm === "micro-atx" &&
-          (caseForm === "micro-atx" || caseForm === "atx")) ||
+        (mbForm === "micro-atx" && (caseForm === "micro-atx" || caseForm === "atx")) ||
         (mbForm === "mini-itx" &&
-          (caseForm === "mini-itx" ||
-            caseForm === "micro-atx" ||
-            caseForm === "atx"))
+          (caseForm === "mini-itx" || caseForm === "micro-atx" || caseForm === "atx"))
       ) {
         msgs.push({
           type: "success",
@@ -225,15 +336,33 @@ const updateCompatibility = () => {
 
 const addToCart = async () => {
   if (!isCompatible.value || totalPrice.value === 0) return;
-  for (const key in selected.value) {
-    if (selected.value[key]) {
-      await axios.post("/api/cart", {
-        product_id: selected.value[key].id,
-        quantity: 1,
-      });
+
+  try {
+    for (const key in selected.value) {
+      if (selected.value[key]) {
+        await axios.post("/api/cart", {
+          product_id: selected.value[key].id,
+          quantity: 1,
+        });
+      }
     }
+    selected.value = {
+      cpu: null,
+      gpu: null,
+      motherboard: null,
+      ram: null,
+      psu: null,
+      cooler: null,
+      storage: null,
+      case: null,
+    };
+    localStorage.removeItem("pcBuilderBuild");
+    updateCompatibility();
+    router.push("/cart");
+  } catch (err) {
+    console.error("Ошибка добавления в корзину:", err);
+    alert("Не удалось добавить сборку в корзину");
   }
-  router.push("/cart");
 };
 
 onMounted(async () => {
@@ -267,6 +396,126 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.clear-all-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color 0.3s;
+}
+
+.clear-all-btn:hover {
+  background-color: #c0392b;
+}
+
+.add-to-cart-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color 0.3s;
+}
+
+.add-to-cart-btn:hover:not(:disabled) {
+  background-color: #357abd;
+}
+
+.add-to-cart-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+.save-build-section {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.save-build-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.save-build-btn:hover {
+  background-color: #2ecc71;
+}
+
+.save-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.save-form input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.confirm-btn,
+.cancel-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.confirm-btn {
+  background-color: #27ae60;
+  color: white;
+}
+
+.confirm-btn:hover {
+  background-color: #2ecc71;
+}
+
+.cancel-btn {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background-color: #c0392b;
+}
 .pc-builder-page {
   min-height: 100vh;
   background-color: #f5f5f5;

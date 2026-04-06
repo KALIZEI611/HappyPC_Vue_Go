@@ -29,6 +29,9 @@ func main() {
     authHandler := handlers.NewAuthHandler(userRepo, sessionRepo)
     orderHandler := handlers.NewOrderHandler(db, cartRepo)
 
+    buildRepo := repository.NewBuildRepository(db)
+    buildHandler := handlers.NewBuildHandler(buildRepo, db)
+
     r := chi.NewRouter()
     r.Use(middleware.Logger)
     r.Use(middleware.Recoverer)
@@ -61,9 +64,11 @@ func main() {
             r.Put("/cart/{productId}", cartHandler.UpdateCartItem)
             r.Delete("/cart/{productId}", cartHandler.RemoveFromCart)
             r.Delete("/cart", orderHandler.ClearCart)
-
             r.Get("/orders", orderHandler.GetUserOrders)
             r.Post("/orders", orderHandler.CreateOrder)
+            r.Post("/builds", buildHandler.SaveBuild)
+            r.Get("/builds", buildHandler.GetUserBuilds)
+            r.Delete("/builds/{id}", buildHandler.DeleteBuild)
         })
     })
 
