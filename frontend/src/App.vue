@@ -30,7 +30,7 @@ const router = useRouter();
 const cart = ref([]);
 
 const cartCount = computed(() =>
-  cart.value.reduce((acc, item) => acc + item.quantity, 0),
+  cart.value.reduce((acc, item) => acc + item.quantity, 0)
 );
 
 const showBreadcrumbs = computed(() => {
@@ -87,7 +87,14 @@ const removeFromCart = async (productId) => {
     console.error("Ошибка удаления из корзины:", err);
   }
 };
-
+watch(
+  () => route.path,
+  (newPath) => {
+    if (newPath === "/cart" && user.value) {
+      fetchCart();
+    }
+  }
+);
 watch(user, async (newUser) => {
   if (newUser) {
     await fetchCart();
@@ -102,8 +109,7 @@ onMounted(async () => {
     if (user.value) {
       await fetchCart();
     }
-  } catch {
-  }
+  } catch {}
 });
 </script>
 

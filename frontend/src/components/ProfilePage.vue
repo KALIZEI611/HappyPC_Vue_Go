@@ -88,17 +88,35 @@
 
           <div v-else-if="activeTab === 'builds'" class="tab-content">
             <h2>Мои сборки</h2>
-            <p>Здесь будут отображаться ваши сборки ПК.</p>
-          </div>
-
-          <div v-else-if="activeTab === 'favorites'" class="tab-content">
-            <h2>Избранное</h2>
-            <p>Здесь будут отображаться избранные товары.</p>
-          </div>
-
-          <div v-else-if="activeTab === 'feedback'" class="tab-content">
-            <h2>Обратная связь</h2>
-            <p>Форма обратной связи будет здесь.</p>
+            <div v-if="buildsLoading" class="loading">Загрузка сборок...</div>
+            <div v-else-if="builds.length === 0" class="no-builds">
+              <p>У вас пока нет сохранённых сборок.</p>
+            </div>
+            <div v-else class="builds-list">
+              <div v-for="build in builds" :key="build.id" class="build-card">
+                <div class="build-header">
+                  <h3>{{ build.name }}</h3>
+                  <button @click="deleteBuild(build.id)" class="delete-build-btn">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+                <div class="build-components">
+                  <div
+                    v-for="(comp, type) in build.components"
+                    :key="type"
+                    class="build-component"
+                  >
+                    <strong>{{ getComponentTypeName(type) }}:</strong> {{ comp.name }}
+                  </div>
+                </div>
+                <div class="build-footer">
+                  <span class="build-date">{{ formatDate(build.created_at) }}</span>
+                  <button @click="loadBuild(build.components)" class="load-build-btn">
+                    Загрузить сборку
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </main>
       </div>
@@ -111,12 +129,17 @@ import { ref, onMounted, watch } from "vue";
 import axios from "axios";
 import { user, fetchUser, logout } from "../utils/cache";
 import { allProductsCache } from "../utils/cache";
+import { useRouter, useRoute } from "vue-router";
 
 const activeTab = ref("profile");
 const userData = ref(null);
 const loading = ref(true);
 const orders = ref([]);
 const ordersLoading = ref(false);
+const builds = ref([]);
+const buildsLoading = ref(false);
+const router = useRouter();
+const route = useRoute();
 
 const menuItems = [
   { id: "profile", name: "Мой профиль", icon: "fas fa-user" },
@@ -125,6 +148,20 @@ const menuItems = [
   { id: "favorites", name: "Избранное", icon: "fas fa-heart" },
   { id: "feedback", name: "Обратная связь", icon: "fas fa-envelope" },
 ];
+
+const getComponentTypeName = (type) => {
+  const names = {
+    cpu: "Процессор",
+    gpu: "Видеокарта",
+    motherboard: "Материнская плата",
+    ram: "Оперативная память",
+    psu: "Блок питания",
+    cooler: "Кулер",
+    storage: "SSD",
+    case: "Корпус",
+  };
+  return names[type] || type;
+};
 
 const formatDate = (dateString) => {
   if (!dateString) return "";
@@ -184,6 +221,73 @@ const fetchOrders = async () => {
   }
 };
 
+const fetchBuilds = async () => {
+  if (!user.value) return;
+  buildsLoading.value = true;
+  try {
+    const { data } = await axios.get("/api/builds");
+    builds.value = data;
+  } catch (err) {
+    console.error("Ошибка загрузки сборок:", err);
+  } finally {
+    buildsLoading.value = false;
+  }
+};
+
+const deleteBuild = async (buildId) => {
+  if (!confirm("Удалить эту сборку?")) return;
+  try {
+    await axios.delete(`/api/builds/${buildId}`);
+    await fetchBuilds();
+  } catch (err) {
+    console.error("Ошибка удаления сборки:", err);
+    alert("Не удалось удалить сборку");
+  }
+};
+
+const loadBuild = async (components) => {
+  // Загружаем все товары из кэша
+  let allProducts = allProductsCache.get();
+  if (!allProducts) {
+    try {
+      const { data: cats } = await axios.get("/categories");
+      const promises = cats.map(async (cat) => {
+        const res = await axios.get(`/${cat.url_key}`);
+        return res.data;
+      });
+      const results = await Promise.all(promises);
+      allProducts = results.flat();
+      allProductsCache.set(allProducts);
+    } catch (err) {
+      console.error("Ошибка загрузки товаров:", err);
+      alert("Не удалось загрузить товары");
+      return;
+    }
+  }
+
+  const buildToLoad = {};
+  for (const [type, comp] of Object.entries(components)) {
+    if (comp && comp.id) {
+      // Ищем полный объект товара по ID
+      const fullProduct = allProducts.find((p) => p.id === comp.id);
+      if (fullProduct) {
+        buildToLoad[type] = fullProduct;
+      } else {
+        // Если не нашли, используем сохранённые данные
+        buildToLoad[type] = comp;
+      }
+    }
+  }
+
+  localStorage.setItem("pcBuilderBuild", JSON.stringify(buildToLoad));
+  router.push("/pc-builder");
+};
+watch(activeTab, (newTab) => {
+  if (newTab === "builds") {
+    fetchBuilds();
+  }
+});
+
 watch(activeTab, (newTab) => {
   if (newTab === "orders") {
     fetchOrders();
@@ -201,6 +305,83 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.builds-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.build-card {
+  background: #f9f9f9;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+}
+
+.build-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.build-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.delete-build-btn {
+  background: none;
+  border: none;
+  color: #e74c3c;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 5px 10px;
+  border-radius: 6px;
+}
+
+.delete-build-btn:hover {
+  background: #fee;
+}
+
+.build-components {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.build-component {
+  font-size: 0.9rem;
+}
+
+.build-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 10px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.build-date {
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.load-build-btn {
+  padding: 6px 12px;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.load-build-btn:hover {
+  background-color: #357abd;
+}
 .profile-page {
   min-height: 100vh;
   background-color: #f5f5f5;

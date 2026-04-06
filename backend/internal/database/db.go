@@ -25,7 +25,9 @@ func InitDB(cfg *config.Config) *gorm.DB {
     if err := db.AutoMigrate(&models.Category{}, &models.Product{}, &models.CartItem{}, &models.User{}, &models.Session{}, &models.Order{}, &models.OrderItem{}); err != nil {
         log.Fatal("Migration failed:", err)
     }
-
+    if err := db.AutoMigrate(&models.Build{}); err != nil {
+        log.Fatal("Build migration failed:", err)
+    }
     seedCategories(db)
     seedProducts(db)
 

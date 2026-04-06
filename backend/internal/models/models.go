@@ -90,3 +90,13 @@ type OrderItem struct {
     Quantity  int            `json:"quantity"`
     Price     float64        `json:"price"`
 }
+
+type Build struct {
+    ID         uint           `json:"id" gorm:"primarykey"`
+    CreatedAt  time.Time      `json:"created_at"`
+    UpdatedAt  time.Time      `json:"-"`
+    DeletedAt  gorm.DeletedAt `json:"-" gorm:"index"`
+    UserID     uint           `json:"user_id" gorm:"not null;index"`
+    Name       string         `json:"name" gorm:"not null"`
+    Components json.RawMessage `json:"components" gorm:"type:jsonb"`
+}
