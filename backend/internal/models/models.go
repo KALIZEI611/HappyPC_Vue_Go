@@ -52,7 +52,7 @@ type User struct {
     ID           uint      `json:"id" gorm:"primarykey"`
     CreatedAt    time.Time `json:"-"`
     UpdatedAt    time.Time `json:"-"`
-    Username     string    `json:"username" gorm:"unique;not null"`
+    Username     string    `json:"username" gorm:"not null"` // unique удалён
     Email        string    `json:"email" gorm:"unique;not null"`
     PasswordHash string    `json:"-" gorm:"not null"`
 }

@@ -2,7 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"regexp"
+	"strings"
 	"time"
 	"unicode/utf8"
 
@@ -29,26 +32,50 @@ type registerRequest struct {
     Password string `json:"password"`
 }
 
+func validatePassword(password string) error {
+    if len(password) < 8 {
+        return fmt.Errorf("пароль должен содержать минимум 8 символов")
+    }
+    hasUpper := regexp.MustCompile(`[A-Z]`).MatchString(password)
+    if !hasUpper {
+        return fmt.Errorf("пароль должен содержать хотя бы одну заглавную букву")
+    }
+    hasDigit := regexp.MustCompile(`[0-9]`).MatchString(password)
+    if !hasDigit {
+        return fmt.Errorf("пароль должен содержать хотя бы одну цифру")
+    }
+    hasSpecial := regexp.MustCompile(`[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]`).MatchString(password)
+    if !hasSpecial {
+        return fmt.Errorf("пароль должен содержать хотя бы один специальный символ (!@#$%^&* и т.д.)")
+    }
+    return nil
+}
+
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
     var req registerRequest
     if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-        http.Error(w, "Invalid request", http.StatusBadRequest)
+        http.Error(w, "Неверный запрос", http.StatusBadRequest)
         return
     }
 
     if req.Username == "" || req.Email == "" || req.Password == "" {
-        http.Error(w, "All fields are required", http.StatusBadRequest)
+        http.Error(w, "Все поля обязательны для заполнения", http.StatusBadRequest)
         return
     }
 
     if utf8.RuneCountInString(req.Username) > 10 {
-        http.Error(w, "Username must be at most 10 characters", http.StatusBadRequest)
+        http.Error(w, "Имя пользователя не должно превышать 10 символов", http.StatusBadRequest)
+        return
+    }
+
+    if err := validatePassword(req.Password); err != nil {
+        http.Error(w, err.Error(), http.StatusBadRequest)
         return
     }
 
     hash, err := utils.HashPassword(req.Password)
     if err != nil {
-        http.Error(w, "Server error", http.StatusInternalServerError)
+        http.Error(w, "Ошибка сервера", http.StatusInternalServerError)
         return
     }
 
@@ -59,7 +86,11 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
     }
 
     if err := h.userRepo.Create(user); err != nil {
-        http.Error(w, "User with this email or username already exists", http.StatusConflict)
+        if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
+            http.Error(w, "Пользователь с таким email уже существует", http.StatusConflict)
+        } else {
+            http.Error(w, "Ошибка создания пользователя", http.StatusInternalServerError)
+        }
         return
     }
 
@@ -87,7 +118,6 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
         "email":    user.Email,
     })
 }
-
 
 type loginRequest struct {
     Email    string `json:"email"`
