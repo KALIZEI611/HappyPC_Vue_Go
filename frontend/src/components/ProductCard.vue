@@ -1,5 +1,13 @@
 <template>
   <div v-if="product" class="product-card" @click="goToProductPage">
+    <button
+      @click.stop="toggleFavorite"
+      class="favorite-btn"
+      :class="{ active: isFavorite }"
+    >
+      <i :class="isFavorite ? 'fas fa-heart' : 'far fa-heart'"></i>
+    </button>
+
     <div class="product-image-container">
       <div class="product-image">
         <img :src="product.image" :alt="product.name" loading="lazy" />
@@ -44,8 +52,10 @@
 </template>
 
 <script setup>
+import { ref, onMounted, watch, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { computed } from "vue";
+import favoritesService from "../services/favoritesService"
+import { user } from "../utils/cache";
 
 const props = defineProps({
   product: { type: Object, required: true },
@@ -56,7 +66,33 @@ const emit = defineEmits(["add-to-cart", "update-cart", "add-to-build"]);
 const router = useRouter();
 const route = useRoute();
 
+const isFavorite = ref(false);
 const isBuilderMode = computed(() => route.query.from === "builder");
+
+const toggleFavorite = async () => {
+  if (!user.value) {
+    router.push("/login");
+    return;
+  }
+
+  try {
+    isFavorite.value = await favoritesService.toggleFavorite(props.product.id);
+  } catch (err) {
+    console.error("Ошибка переключения избранного:", err);
+  }
+};
+
+const checkFavoriteStatus = async () => {
+  if (!user.value) return;
+  try {
+    const favorites = await favoritesService.getFavorites();
+    isFavorite.value = favorites.some(
+      (f) => f.product_id === props.product.id || f.Product?.id === props.product.id
+    );
+  } catch (err) {
+    console.error("Ошибка проверки избранного:", err);
+  }
+};
 
 const goToProductPage = () => {
   if (route.name === "Search") {
@@ -91,17 +127,27 @@ const decrement = () => {
     emit("update-cart", props.product.id, props.quantity - 1);
   }
 };
+
+onMounted(() => {
+  checkFavoriteStatus();
+});
+
+watch(
+  () => user.value,
+  () => {
+    checkFavoriteStatus();
+  }
+);
 </script>
 
 <style scoped>
 .product-card {
+  position: relative;
   background: white;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  transition:
-    transform 0.3s,
-    box-shadow 0.3s;
+  transition: transform 0.3s, box-shadow 0.3s;
   border: 1px solid #e0e0e0;
   display: flex;
   flex-direction: column;
@@ -111,6 +157,49 @@ const decrement = () => {
 .product-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.favorite-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+  background: white;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s;
+  color: #999;
+}
+
+.favorite-btn:hover {
+  transform: scale(1.1);
+}
+
+.favorite-btn.active {
+  color: #e74c3c;
+}
+
+.favorite-btn.active i {
+  animation: heartBeat 0.3s ease;
+}
+
+@keyframes heartBeat {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .product-image-container {
@@ -208,6 +297,7 @@ const decrement = () => {
   width: fit-content;
   margin: 0 auto;
 }
+
 .qty-btn {
   width: 36px;
   height: 36px;
