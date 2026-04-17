@@ -73,8 +73,8 @@ HappyPC/
 ### 1. Клонирование репозитория
 
 ```bash
-git clone https://github.com/your-username/HappyPC.git
-cd HappyPC
+https://github.com/KALIZEI611/HappyPC_Vue_Go.git
+cd HappyPC_Vue_Go
 ```
 
 ### 2. Настройка переменных окружения (опционально)
