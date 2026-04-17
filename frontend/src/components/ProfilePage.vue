@@ -51,26 +51,43 @@
               <div v-for="order in orders" :key="order.id" class="order-card">
                 <div class="order-header">
                   <span class="order-id">Заказ №{{ order.id }}</span>
-                  <span class="order-date">{{ formatDate(order.created_at) }}</span>
+                  <span class="order-date">{{
+                    formatDate(order.created_at)
+                  }}</span>
                   <span class="order-status" :class="'status-' + order.status">
                     {{ getStatusText(order.status) }}
                   </span>
                 </div>
                 <div class="order-items">
-                  <div v-for="item in order.items" :key="item.id" class="order-item">
-                    <router-link :to="'/product/' + item.product_id" class="item-name">
+                  <div
+                    v-for="item in order.items"
+                    :key="item.id"
+                    class="order-item"
+                  >
+                    <router-link
+                      :to="'/product/' + item.product_id"
+                      class="item-name"
+                    >
                       {{ getProductName(item.product_id) }}
                     </router-link>
                     <span class="item-quantity">{{ item.quantity }} шт.</span>
-                    <span class="item-price">{{ item.price.toLocaleString() }} ₽</span>
+                    <span class="item-price"
+                      >{{ item.price.toLocaleString() }} ₽</span
+                    >
                     <span class="item-total"
-                      >{{ (item.price * item.quantity).toLocaleString() }} ₽</span
+                      >{{
+                        (item.price * item.quantity).toLocaleString()
+                      }}
+                      ₽</span
                     >
                   </div>
                 </div>
                 <div class="order-footer">
                   <div class="delivery-info">
-                    <span>Доставка: {{ getDeliveryText(order.delivery_method) }}</span>
+                    <span
+                      >Доставка:
+                      {{ getDeliveryText(order.delivery_method) }}</span
+                    >
                     <span v-if="order.delivery_address"
                       >({{ order.delivery_address }})</span
                     >
@@ -96,7 +113,10 @@
               <div v-for="build in builds" :key="build.id" class="build-card">
                 <div class="build-header">
                   <h3>{{ build.name }}</h3>
-                  <button @click="deleteBuild(build.id)" class="delete-build-btn">
+                  <button
+                    @click="deleteBuild(build.id)"
+                    class="delete-build-btn"
+                  >
                     <i class="fas fa-trash"></i>
                   </button>
                 </div>
@@ -106,12 +126,18 @@
                     :key="type"
                     class="build-component"
                   >
-                    <strong>{{ getComponentTypeName(type) }}:</strong> {{ comp.name }}
+                    <strong>{{ getComponentTypeName(type) }}:</strong>
+                    {{ comp.name }}
                   </div>
                 </div>
                 <div class="build-footer">
-                  <span class="build-date">{{ formatDate(build.created_at) }}</span>
-                  <button @click="loadBuild(build.components)" class="load-build-btn">
+                  <span class="build-date">{{
+                    formatDate(build.created_at)
+                  }}</span>
+                  <button
+                    @click="loadBuild(build.components)"
+                    class="load-build-btn"
+                  >
                     Загрузить сборку
                   </button>
                 </div>
@@ -126,12 +152,20 @@
             <div v-else-if="favorites.length === 0" class="no-favorites">
               <i class="far fa-heart"></i>
               <p>У вас пока нет избранных товаров</p>
-              <router-link to="/" class="browse-link">Перейти к покупкам</router-link>
+              <router-link to="/" class="browse-link"
+                >Перейти к покупкам</router-link
+              >
             </div>
             <div v-else class="favorites-grid">
-              <div v-for="item in favorites" :key="item.id" class="favorite-item">
+              <div
+                v-for="item in favorites"
+                :key="item.id"
+                class="favorite-item"
+              >
                 <button
-                  @click="removeFromFavorites(item.product_id || item.Product?.id)"
+                  @click="
+                    removeFromFavorites(item.product_id || item.Product?.id)
+                  "
                   class="remove-favorite"
                   title="Удалить из избранного"
                 >
@@ -148,7 +182,12 @@
                   />
                   <h3>{{ item.product?.name || item.Product?.name }}</h3>
                   <div class="price">
-                    {{ (item.product?.price || item.Product?.price).toLocaleString() }} ₽
+                    {{
+                      (
+                        item.product?.price || item.Product?.price
+                      ).toLocaleString()
+                    }}
+                    ₽
                   </div>
                 </router-link>
 
@@ -162,7 +201,7 @@
                       @click="
                         updateCartQuantity(
                           item.product_id || item.Product?.id,
-                          getQuantity(item.product_id || item.Product?.id) - 1
+                          getQuantity(item.product_id || item.Product?.id) - 1,
                         )
                       "
                       class="qty-btn"
@@ -176,7 +215,7 @@
                       @click="
                         updateCartQuantity(
                           item.product_id || item.Product?.id,
-                          getQuantity(item.product_id || item.Product?.id) + 1
+                          getQuantity(item.product_id || item.Product?.id) + 1,
                         )
                       "
                       class="qty-btn"
@@ -186,7 +225,9 @@
                   </div>
                   <button
                     v-else
-                    @click="addToCartFromFavorites(item.product || item.Product)"
+                    @click="
+                      addToCartFromFavorites(item.product || item.Product)
+                    "
                     class="add-to-cart-fav"
                   >
                     <i class="fas fa-cart-plus"></i> В корзину
@@ -198,144 +239,82 @@
 
           <div v-else-if="activeTab === 'feedback'" class="tab-content">
             <h2>Обратная связь</h2>
+            <div class="feedback-form">
+              <form @submit.prevent="sendFeedback">
+                <div class="form-group">
+                  <label for="subject">Тема</label>
+                  <select id="subject" v-model="feedbackForm.subject" required>
+                    <option value="">Выберите тему</option>
+                    <option value="Вопрос о товаре">Вопрос о товаре</option>
+                    <option value="Проблема с заказом">
+                      Проблема с заказом
+                    </option>
+                    <option value="Предложение">Предложение</option>
+                    <option value="Другое">Другое</option>
+                  </select>
+                </div>
 
-            <div class="feedback-container">
-              <div class="feedback-form-wrapper">
-                <form @submit.prevent="sendFeedback" class="feedback-form">
-                  <div class="form-group-modern">
-                    <label class="form-label">
-                      <i class="fas fa-tag"></i>
-                      <span>Тема обращения</span>
-                    </label>
-                    <div class="select-wrapper">
-                      <select v-model="feedbackForm.subject" required class="form-select">
-                        <option value="" disabled>Выберите тему</option>
-                        <option value="order">
-                          <i class="fas fa-shopping-bag"></i> Вопрос о заказе
-                        </option>
-                        <option value="product">
-                          <i class="fas fa-microchip"></i> Проблема с товаром
-                        </option>
-                        <option value="delivery">
-                          <i class="fas fa-truck"></i> Доставка
-                        </option>
-                        <option value="payment">
-                          <i class="fas fa-credit-card"></i> Оплата
-                        </option>
-                        <option value="other">
-                          <i class="fas fa-comment"></i> Другое
-                        </option>
-                      </select>
-                      <i class="fas fa-chevron-down select-arrow"></i>
-                    </div>
-                  </div>
+                <div class="form-group">
+                  <label for="message">Сообщение</label>
+                  <textarea
+                    id="message"
+                    v-model="feedbackForm.message"
+                    rows="5"
+                    required
+                    placeholder="Опишите ваш вопрос или проблему..."
+                  ></textarea>
+                </div>
 
-                  <div class="form-group-modern">
-                    <label class="form-label">
-                      <i class="fas fa-envelope"></i>
-                      <span>Сообщение</span>
-                    </label>
-                    <div class="textarea-wrapper">
-                      <textarea
-                        v-model="feedbackForm.message"
-                        rows="6"
-                        placeholder="Опишите вашу проблему или вопрос..."
-                        required
-                        class="form-textarea"
-                      ></textarea>
-                      <div class="textarea-footer">
-                        <span class="char-count"
-                          >{{ feedbackForm.message.length }}/1000</span
-                        >
-                        <span class="markdown-hint">
-                          <i class="fas fa-markdown"></i> Поддерживается Markdown
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                <div class="form-group checkbox">
+                  <label>
+                    <input type="checkbox" v-model="feedbackForm.copyToEmail" />
+                    Отправить копию сообщения на мой email ({{ user?.email }})
+                  </label>
+                </div>
 
-                  <div class="form-group-modern checkbox-group">
-                    <label class="checkbox-label">
-                      <input type="checkbox" v-model="feedbackForm.copyToEmail" />
-                      <span class="checkbox-custom"></span>
-                      <span class="checkbox-text">
-                        <i class="fas fa-paper-plane"></i>
-                        Отправить копию на email
-                      </span>
-                    </label>
-                  </div>
+                <button
+                  type="submit"
+                  :disabled="feedbackLoading"
+                  class="submit-feedback-btn"
+                >
+                  {{ feedbackLoading ? "Отправка..." : "Отправить сообщение" }}
+                </button>
 
-                  <div class="form-actions">
-                    <button
-                      type="submit"
-                      :disabled="feedbackLoading"
-                      class="submit-btn-modern"
+                <div v-if="feedbackSuccess" class="success-message">
+                  <i class="fas fa-check-circle"></i> {{ feedbackSuccess }}
+                </div>
+                <div v-if="feedbackError" class="error-message">
+                  <i class="fas fa-exclamation-circle"></i> {{ feedbackError }}
+                </div>
+              </form>
+
+              <div class="feedback-info">
+                <h4>Часто задаваемые вопросы</h4>
+                <ul>
+                  <li>
+                    <strong>Как долго обрабатывается заказ?</strong>
+                    <p>
+                      Обычно заказ обрабатывается в течение 1-2 рабочих дней.
+                    </p>
+                  </li>
+                  <li>
+                    <strong
+                      >Можно ли изменить адрес доставки после
+                      оформления?</strong
                     >
-                      <i
-                        :class="
-                          feedbackLoading
-                            ? 'fas fa-spinner fa-spin'
-                            : 'fas fa-paper-plane'
-                        "
-                      ></i>
-                      {{ feedbackLoading ? "Отправка..." : "Отправить сообщение" }}
-                    </button>
-                  </div>
-
-                  <div v-if="feedbackSuccess" class="alert-success">
-                    <i class="fas fa-check-circle"></i>
-                    <span>{{ feedbackSuccess }}</span>
-                  </div>
-
-                  <div v-if="feedbackError" class="alert-error">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <span>{{ feedbackError }}</span>
-                  </div>
-                </form>
-              </div>
-
-              <div class="feedback-info-modern">
-                <h3>
-                  <i class="fas fa-question-circle"></i>
-                  Часто задаваемые вопросы
-                </h3>
-
-                <div class="faq-list">
-                  <div class="faq-item" v-for="(faq, index) in faqList" :key="index">
-                    <div class="faq-question" @click="toggleFaq(index)">
-                      <i class="fas fa-question"></i>
-                      <span>{{ faq.question }}</span>
-                      <i
-                        :class="faq.open ? 'fas fa-chevron-up' : 'fas fa-chevron-down'"
-                      ></i>
-                    </div>
-                    <div class="faq-answer" v-show="faq.open">
-                      <i class="fas fa-reply"></i>
-                      <p>{{ faq.answer }}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="contact-info">
-                  <h4>
-                    <i class="fas fa-headset"></i>
-                    Служба поддержки
-                  </h4>
-                  <div class="contact-details">
-                    <div class="contact-item">
-                      <i class="fas fa-phone-alt"></i>
-                      <span>+7 (800) 123-45-67</span>
-                    </div>
-                    <div class="contact-item">
-                      <i class="fas fa-clock"></i>
-                      <span>Пн-Пт: 9:00 - 20:00</span>
-                    </div>
-                    <div class="contact-item">
-                      <i class="fas fa-envelope"></i>
-                      <span>support@happypc.ru</span>
-                    </div>
-                  </div>
-                </div>
+                    <p>
+                      Да, свяжитесь с нами в течение 1 часа после оформления
+                      заказа.
+                    </p>
+                  </li>
+                  <li>
+                    <strong>Как отследить статус заказа?</strong>
+                    <p>
+                      Вы можете посмотреть статус в разделе «Мои заказы» в
+                      профиле.
+                    </p>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
@@ -368,12 +347,12 @@ const builds = ref([]);
 const buildsLoading = ref(false);
 const favorites = ref([]);
 const favoritesLoading = ref(false);
-const cart = ref([]); // Добавляем корзину
+const cart = ref([]);
 
 // Функция для получения количества товара в корзине
 const getQuantity = (productId) => {
   const cartItem = cart.value.find(
-    (item) => item.product?.id === productId || item.product_id === productId
+    (item) => item.product?.id === productId || item.product_id === productId,
   );
   return cartItem ? cartItem.quantity : 0;
 };
@@ -594,18 +573,33 @@ const addToCartFromFavorites = async (product) => {
 };
 
 const sendFeedback = async () => {
+  if (!user.value) {
+    router.push("/login");
+    return;
+  }
+  if (!feedbackForm.subject || !feedbackForm.message.trim()) {
+    feedbackError.value = "Заполните тему и сообщение";
+    return;
+  }
+
   feedbackLoading.value = true;
   feedbackSuccess.value = "";
   feedbackError.value = "";
 
   try {
-    await axios.post("/api/feedback", feedbackForm);
-    feedbackSuccess.value = "Сообщение отправлено! Мы ответим вам в ближайшее время.";
+    await axios.post("/api/feedback", {
+      subject: feedbackForm.subject,
+      message: feedbackForm.message,
+      copyToEmail: feedbackForm.copyToEmail,
+    });
+    feedbackSuccess.value =
+      "Сообщение отправлено! Мы ответим вам в ближайшее время.";
     feedbackForm.subject = "";
     feedbackForm.message = "";
     feedbackForm.copyToEmail = false;
   } catch (err) {
-    feedbackError.value = err.response?.data || "Ошибка отправки сообщения";
+    feedbackError.value =
+      err.response?.data || "Ошибка отправки сообщения. Попробуйте позже.";
   } finally {
     feedbackLoading.value = false;
   }
@@ -1046,7 +1040,9 @@ onMounted(async () => {
   border-radius: 12px;
   padding: 16px;
   border: 1px solid #e0e0e0;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .favorite-item:hover {
@@ -1207,7 +1203,6 @@ onMounted(async () => {
   background-color: #357abd;
 }
 
-/* Обратная связь */
 .feedback-form {
   max-width: 600px;
 }
@@ -1243,6 +1238,56 @@ onMounted(async () => {
 
 .form-group textarea {
   resize: vertical;
+}
+
+.form-group.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-group.checkbox label {
+  margin-bottom: 0;
+  font-weight: normal;
+  cursor: pointer;
+}
+
+.submit-feedback-btn {
+  padding: 12px 24px;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.submit-feedback-btn:hover:not(:disabled) {
+  background-color: #357abd;
+}
+
+.submit-feedback-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.success-message {
+  margin-top: 15px;
+  padding: 10px;
+  background: #e8f5e9;
+  color: #27ae60;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.error-message {
+  margin-top: 15px;
+  padding: 10px;
+  background: #ffebee;
+  color: #e74c3c;
+  border-radius: 8px;
+  text-align: center;
 }
 
 .feedback-info {
