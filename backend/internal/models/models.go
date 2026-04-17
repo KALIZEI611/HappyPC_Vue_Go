@@ -100,3 +100,22 @@ type Build struct {
     Name       string         `json:"name" gorm:"not null"`
     Components json.RawMessage `json:"components" gorm:"type:jsonb"`
 }
+type Favorite struct {
+	ID        uint      `json:"id" gorm:"primarykey"`
+	CreatedAt time.Time `json:"created_at"`
+	UserID    uint      `json:"user_id" gorm:"not null;index"`
+	ProductID uint      `json:"product_id" gorm:"not null;index"`
+	Product   Product   `json:"product" gorm:"foreignKey:ProductID"`
+}
+
+type Feedback struct {
+	ID          uint      `json:"id" gorm:"primarykey"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"-"`
+	UserID      uint      `json:"user_id" gorm:"not null;index"`
+	Subject     string    `json:"subject" gorm:"not null"`
+	Message     string    `json:"message" gorm:"type:text;not null"`
+	Status      string    `json:"status" gorm:"default:'pending'"`
+	CopyToEmail bool      `json:"copy_to_email" gorm:"default:false"`
+	User        User      `json:"user,omitempty" gorm:"foreignKey:UserID"`
+}

@@ -1,3 +1,4 @@
+// src/services/cartService.js
 import axios from "axios";
 
 export const cartService = {
@@ -18,3 +19,4 @@ export const cartService = {
     await axios.delete('/api/cart');
   },
 };
+export default cartService;

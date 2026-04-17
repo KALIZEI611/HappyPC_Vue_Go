@@ -32,6 +32,11 @@ func main() {
     buildRepo := repository.NewBuildRepository(db)
     buildHandler := handlers.NewBuildHandler(buildRepo, db)
 
+    favoriteRepo := repository.NewFavoriteRepository(db)
+    favoriteHandler := handlers.NewFavoriteHandler(favoriteRepo)
+    
+    feedbackHandler := handlers.NewFeedbackHandler(db)
+
     r := chi.NewRouter()
     r.Use(middleware.Logger)
     r.Use(middleware.Recoverer)
@@ -69,6 +74,11 @@ func main() {
             r.Post("/builds", buildHandler.SaveBuild)
             r.Get("/builds", buildHandler.GetUserBuilds)
             r.Delete("/builds/{id}", buildHandler.DeleteBuild)
+            r.Get("/favorites", favoriteHandler.GetFavorites)
+            r.Post("/favorites", favoriteHandler.AddFavorite)
+            r.Delete("/favorites/{id}", favoriteHandler.RemoveFavorite)
+            r.Post("/favorites/toggle", favoriteHandler.ToggleFavorite)
+            r.Post("/feedback", feedbackHandler.SendFeedback)
         })
     })
 
