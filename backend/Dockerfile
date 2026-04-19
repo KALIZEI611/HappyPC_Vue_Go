@@ -1,21 +1,28 @@
-FROM golang:1.26-alpine AS builder
+# Этап сборки
+FROM golang:1.21-alpine AS builder
 
 WORKDIR /app
 
+# Копируем go.mod и go.sum
 COPY go.mod go.sum ./
 RUN go mod download
 
+# Копируем исходники
 COPY . .
-RUN go build -o server ./cmd/server
 
+# Собираем бинарник
+RUN CGO_ENABLED=0 GOOS=linux go build -o main .
+
+# Финальный этап
 FROM alpine:latest
-
-RUN apk --no-cache add ca-certificates
 
 WORKDIR /root/
 
-COPY --from=builder /app/server .
+# Копируем бинарник из сборщика
+COPY --from=builder /app/main .
+# Копируем статические файлы (если есть)
+COPY --from=builder /app/static ./static
 
 EXPOSE 8080
 
-CMD ["./server"]
+CMD ["./main"]

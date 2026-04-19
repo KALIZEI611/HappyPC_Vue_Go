@@ -1,3 +1,21 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/" }]
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://your-backend.railway.app/api/$1" },
+    { "source": "/categories", "destination": "https://your-backend.railway.app/categories" },
+    { "source": "/Processors", "destination": "https://your-backend.railway.app/Processors" },
+    { "source": "/Video_cards", "destination": "https://your-backend.railway.app/Video_cards" },
+    { "source": "/RAM", "destination": "https://your-backend.railway.app/RAM" },
+    { "source": "/SSD", "destination": "https://your-backend.railway.app/SSD" },
+    { "source": "/Motherboards", "destination": "https://your-backend.railway.app/Motherboards" },
+    { "source": "/Power_supplies", "destination": "https://your-backend.railway.app/Power_supplies" },
+    { "source": "/Buildings", "destination": "https://your-backend.railway.app/Buildings" },
+    { "source": "/Monitors", "destination": "https://your-backend.railway.app/Monitors" },
+    { "source": "/Coolers", "destination": "https://your-backend.railway.app/Coolers" },
+    { "source": "/Keyboards", "destination": "https://your-backend.railway.app/Keyboards" },
+    { "source": "/Mice", "destination": "https://your-backend.railway.app/Mice" },
+    { "source": "/Headphones", "destination": "https://your-backend.railway.app/Headphones" },
+    { "source": "/cart/(.*)", "destination": "https://your-backend.railway.app/cart/$1" },
+    { "source": "/category/(.*)/products", "destination": "https://your-backend.railway.app/category/$1/products" },
+    { "source": "/(.*)", "destination": "/" }
+  ]
 }
