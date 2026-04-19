@@ -9,8 +9,8 @@ RUN go mod download
 # Копируем весь код бэкенда
 COPY backend/ .
 
-# Собираем бинарник
-RUN CGO_ENABLED=0 GOOS=linux go build -o main .
+# Собираем бинарник, указывая путь к пакету с main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/server
 
 # Финальный этап
 FROM alpine:latest
