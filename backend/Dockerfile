@@ -1,14 +1,14 @@
-# Этап сборки
+# backend/Dockerfile
 FROM golang:1.21-alpine AS builder
 
 WORKDIR /app
 
-# Копируем go.mod и go.sum
-COPY go.mod go.sum ./
+# Копируем go.mod и go.sum из папки backend (контекст сборки - корень репозитория)
+COPY backend/go.mod backend/go.sum ./
 RUN go mod download
 
-# Копируем исходники
-COPY . .
+# Копируем весь код бэкенда
+COPY backend/ .
 
 # Собираем бинарник
 RUN CGO_ENABLED=0 GOOS=linux go build -o main .
@@ -20,8 +20,6 @@ WORKDIR /root/
 
 # Копируем бинарник из сборщика
 COPY --from=builder /app/main .
-# Копируем статические файлы (если есть)
-COPY --from=builder /app/static ./static
 
 EXPOSE 8080
 
