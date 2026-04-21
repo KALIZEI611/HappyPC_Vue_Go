@@ -52,7 +52,7 @@ func main() {
             "http://localhost:5173",
             "http://127.0.0.1",
             "http://127.0.0.1:5173",
-            "https://your-frontend.vercel.app", // Добавьте ваш Vercel URL
+            "https://happy-pc-vue-go.vercel.app", // Добавьте ваш Vercel URL
         },
         AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
         AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
