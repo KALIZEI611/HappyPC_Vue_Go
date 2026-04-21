@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 
 	"backend/internal/config"
 	"backend/internal/models"
@@ -11,6 +12,63 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
+
+func ConnectDB() (*gorm.DB, error) {
+    // Пытаемся получить DATABASE_URL (приоритет 1)
+    dsn := os.Getenv("DATABASE_URL")
+    
+    // Если DATABASE_URL нет, собираем из отдельных переменных
+    if dsn == "" {
+        host := getEnv("DB_HOST", getEnv("PGHOST", "localhost"))
+        port := getEnv("DB_PORT", getEnv("PGPORT", "5432"))
+        user := getEnv("DB_USER", getEnv("PGUSER", "postgres"))
+        password := getEnv("DB_PASSWORD", getEnv("PGPASSWORD", ""))
+        dbname := getEnv("DB_NAME", getEnv("PGDATABASE", "happypc"))
+        
+        // Логируем для отладки (не забудьте убрать в production)
+        log.Printf("Connecting to DB: host=%s port=%s user=%s dbname=%s", host, port, user, dbname)
+        
+        dsn = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+            host, port, user, password, dbname)
+    }
+    
+    log.Println("Attempting to connect to database...")
+    return gorm.Open(postgres.Open(dsn), &gorm.Config{})
+}
+
+// Вспомогательная функция для получения переменных с дефолтным значением
+func getEnv(keys ...string) string {
+    for _, key := range keys {
+        if value := os.Getenv(key); value != "" {
+            return value
+        }
+    }
+    return ""
+}
+
+func MigrateAndSeed(db *gorm.DB) {
+    // Миграции
+    if err := db.AutoMigrate(
+        &models.Category{}, 
+        &models.Product{}, 
+        &models.CartItem{}, 
+        &models.User{}, 
+        &models.Session{}, 
+        &models.Order{}, 
+        &models.OrderItem{}, 
+        &models.Build{}, 
+        &models.Favorite{}, 
+        &models.Feedback{},
+    ); err != nil {
+        log.Fatal("Migration failed:", err)
+    }
+
+    // Seed данных
+    seedCategories(db)
+    seedProducts(db)
+    
+    log.Println("Database migration and seeding completed")
+}
 
 func InitDB(cfg *config.Config) *gorm.DB {
     dsn := fmt.Sprintf(

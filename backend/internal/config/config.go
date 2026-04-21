@@ -11,14 +11,13 @@ type Config struct {
     ServerPort string
 }
 
-func Load() *Config {
+func LoadConfig() *Config {
     return &Config{
-        DBHost:     getEnv("DB_HOST", "localhost"),
-        DBPort:     getEnv("DB_PORT", "5432"),
-        DBUser:     getEnv("DB_USER", "postgres"),
-        DBPassword: getEnv("DB_PASSWORD", "postgres"),
-        DBName:     getEnv("DB_NAME", "happypc"),
-        ServerPort: getEnv("SERVER_PORT", "8080"),
+        DBHost:     getEnv("DB_HOST", getEnv("PGHOST", "localhost")),
+        DBPort:     getEnv("DB_PORT", getEnv("PGPORT", "5432")),
+        DBUser:     getEnv("DB_USER", getEnv("PGUSER", "postgres")),
+        DBPassword: getEnv("DB_PASSWORD", getEnv("PGPASSWORD", "")),
+        DBName:     getEnv("DB_NAME", getEnv("PGDATABASE", "happypc")),
     }
 }
 

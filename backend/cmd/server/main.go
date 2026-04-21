@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
-	"backend/internal/config"
 	"backend/internal/database"
 	"backend/internal/handlers"
 	"backend/internal/repository"
@@ -15,8 +15,14 @@ import (
 )
 
 func main() {
-    cfg := config.Load()
-    db := database.InitDB(cfg)
+    // Подключаемся к БД через переменные окружения
+    db, err := database.ConnectDB()
+    if err != nil {
+        log.Fatal("Failed to connect to database:", err)
+    }
+    
+    // Выполняем миграции и заполняем начальными данными
+    database.MigrateAndSeed(db)
 
     categoryRepo := repository.NewCategoryRepository(db)
     productRepo := repository.NewProductRepository(db)
@@ -46,12 +52,14 @@ func main() {
             "http://localhost:5173",
             "http://127.0.0.1",
             "http://127.0.0.1:5173",
+            "https://your-frontend.vercel.app", // Добавьте ваш Vercel URL
         },
         AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
         AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
         AllowCredentials: true,
     }))
 
+    // ... остальные маршруты остаются без изменений ...
     r.Get("/categories", categoryHandler.GetAll)
     r.Get("/{urlKey}", categoryHandler.GetProductsByURLKey)
     r.Get("/category/{id}/products", categoryHandler.GetCategoryByID)
@@ -82,7 +90,10 @@ func main() {
         })
     })
 
-    port := cfg.ServerPort
+    port := os.Getenv("SERVER_PORT")
+    if port == "" {
+        port = "8080"
+    }
     log.Printf("Server starting on port %s", port)
     http.ListenAndServe(":"+port, r)
 }
