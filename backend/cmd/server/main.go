@@ -52,14 +52,17 @@ func main() {
             "http://localhost:5173",
             "http://127.0.0.1",
             "http://127.0.0.1:5173",
-            "https://happy-pc-vue-go.vercel.app", // Добавьте ваш Vercel URL
+            "https://happy-pc-vue-6enowbewt-kalizei611s-projects.vercel.app", // ← Добавьте ЭТОТ URL
+            "https://happy-pc-vue-*.vercel.app", // ← Можно добавить wildcard для всех preview
         },
         AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
         AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
         AllowCredentials: true,
     }))
 
-    // ... остальные маршруты остаются без изменений ...
+    r.Options("/*", func(w http.ResponseWriter, r *http.Request) {
+        w.WriteHeader(http.StatusOK)
+    })
     r.Get("/categories", categoryHandler.GetAll)
     r.Get("/{urlKey}", categoryHandler.GetProductsByURLKey)
     r.Get("/category/{id}/products", categoryHandler.GetCategoryByID)
