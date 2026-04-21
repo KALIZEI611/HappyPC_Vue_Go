@@ -12,6 +12,7 @@ import CheckoutPage from "../components/CheckoutPage.vue";
 import OrderSuccessPage from "../components/OrderSuccessPage.vue";
 import OrdersPage from "../components/OrdersPage.vue";
 import PcBuilderPage from "../components/PcBuilderPage.vue";
+import api from "../api";
 
 axios.defaults.withCredentials = true;
 
@@ -55,19 +56,18 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   if (to.meta.requiresAuth) {
     try {
-      const { data } = await axios.get("/api/me");
+      const { data } = await api.get('/api/me');  // Используем api вместо axios
       if (data) {
         next();
       } else {
-        next("/login");
+        next('/login');
       }
     } catch (err) {
-      console.error("Auth guard error:", err);
-      next("/login");
+      console.error('Auth guard error:', err);
+      next('/login');
     }
   } else {
     next();
   }
 });
-
 export default router;
