@@ -69,6 +69,7 @@ import axios from "axios";
 import { specMapping } from "../constants/specMapping";
 import { allProductsCache, homeCategoriesCache } from "../utils/cache";
 import { useBreadcrumbs } from "../composables/useBreadcrumbs";
+import api from "../api";
 
 const props = defineProps({
   cart: { type: Array, required: true },
@@ -115,10 +116,10 @@ const fetchProduct = async () => {
   isFetching = true;
 
   try {
-    const { data: cats } = await axios.get("/categories");
+    const { data: cats } = await api.get("/categories");
     const promises = cats.map(async (cat) => {
       try {
-        const response = await axios.get(`/${cat.url_key}`);
+        const response = await api.get(`/${cat.url_key}`);
         return response.data;
       } catch {
         return [];
@@ -165,7 +166,7 @@ const setProductBreadcrumbs = async (productData) => {
   }
   if (!categoryName && productData.category_id) {
     try {
-      const { data: category } = await axios.get(
+      const { data: category } = await api.get(
         `/category/${productData.category_id}/products`
       );
       categoryName = category.category.name;

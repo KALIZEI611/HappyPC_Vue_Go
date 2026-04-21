@@ -52,6 +52,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import axios from "axios";
+import api from "../api";
 
 const orders = ref([]);
 const loading = ref(true);
@@ -95,7 +96,7 @@ const fetchOrders = async () => {
   loading.value = true;
   error.value = null;
   try {
-    const { data } = await axios.get("/api/orders");
+    const { data } = await api.get("/api/orders");
     orders.value = data;
   } catch (err) {
     error.value = err.response?.data || "Не удалось загрузить заказы";

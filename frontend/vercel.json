@@ -1,7 +1,13 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "https://happypcvuego-production.up.railway.app/api/$1" },
-    { "source": "/categories", "destination": "https://happypcvuego-production.up.railway.app/categories" },
+     {
+      "source": "/api/(.*)",
+      "destination": "https://happypcvuego-production.up.railway.app/api/$1"
+    },
+    {
+      "source": "/categories",
+      "destination": "https://happypcvuego-production.up.railway.app/categories"
+    },
     { "source": "/Processors", "destination": "https://happypcvuego-production.up.railway.app/Processors" },
     { "source": "/Video_cards", "destination": "https://happypcvuego-production.up.railway.app/Video_cards" },
     { "source": "/RAM", "destination": "https://happypcvuego-production.up.railway.app/RAM" },
@@ -16,6 +22,10 @@
     { "source": "/Headphones", "destination": "https://happypcvuego-production.up.railway.app/Headphones" },
     { "source": "/cart/(.*)", "destination": "https://happypcvuego-production.up.railway.app/cart/$1" },
     { "source": "/category/(.*)/products", "destination": "https://happypcvuego-production.up.railway.app/category/$1/products" },
-    { "source": "/(.*)", "destination": "/" }
+    { "source": "/(.*)", "destination": "/" },
+    {
+      "source": "/:path*",
+      "destination": "/index.html"
+    }
   ]
 }

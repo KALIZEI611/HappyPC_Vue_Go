@@ -332,6 +332,7 @@ import { user, fetchUser, logout } from "../utils/cache";
 import { allProductsCache } from "../utils/cache";
 import favoritesService from "../services/favoritesService";
 import cartService from "../services/cartService";
+import api from "../api";
 
 // Определяем emit
 const emit = defineEmits(["add-to-cart", "update-cart", "cart-cleared"]);
@@ -472,7 +473,7 @@ const fetchOrders = async () => {
   if (!user.value) return;
   ordersLoading.value = true;
   try {
-    const { data } = await axios.get("/api/orders");
+    const { data } = await api.get("/api/orders");
     orders.value = data;
   } catch (err) {
     console.error("Ошибка загрузки заказов:", err);
@@ -485,7 +486,7 @@ const fetchBuilds = async () => {
   if (!user.value) return;
   buildsLoading.value = true;
   try {
-    const { data } = await axios.get("/api/builds");
+    const { data } = await api.get("/api/builds");
     builds.value = data;
   } catch (err) {
     console.error("Ошибка загрузки сборок:", err);
@@ -522,9 +523,9 @@ const loadBuild = async (components) => {
   let allProducts = allProductsCache.get();
   if (!allProducts) {
     try {
-      const { data: cats } = await axios.get("/categories");
+      const { data: cats } = await api.get("/categories");
       const promises = cats.map(async (cat) => {
-        const res = await axios.get(`/${cat.url_key}`);
+        const res = await api.get(`/${cat.url_key}`);
         return res.data;
       });
       const results = await Promise.all(promises);

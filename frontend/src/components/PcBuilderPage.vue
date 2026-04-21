@@ -102,6 +102,7 @@ import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
 import { allProductsCache } from "../utils/cache";
 import { user } from "../utils/cache";
+import api from "../api";
 
 const router = useRouter();
 const route = useRoute();
@@ -367,9 +368,9 @@ onMounted(async () => {
   if (returnKey && selectedProductId) {
     let products = allProductsCache.get();
     if (!products) {
-      const { data: cats } = await axios.get("/categories");
+      const { data: cats } = await api.get("/categories");
       const promises = cats.map(async (cat) => {
-        const res = await axios.get(`/${cat.url_key}`);
+        const res = await api.get(`/${cat.url_key}`);
         return res.data;
       });
       const results = await Promise.all(promises);

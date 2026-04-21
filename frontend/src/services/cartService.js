@@ -1,9 +1,10 @@
 // src/services/cartService.js
 import axios from "axios";
+import api from "../api";
 
 export const cartService = {
   async getCart() {
-    const { data } = await axios.get("/api/cart");
+    const { data } = await api.get("/api/cart");
     return data;
   },
   async addToCart(productId, quantity = 1) {

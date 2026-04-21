@@ -12,6 +12,7 @@ import HeroSection from "./HeroSection.vue";
 import CategoriesGrid from "./CategoriesGrid.vue";
 import { homeCategoriesCache } from "../utils/cache";
 import { useBreadcrumbs } from "../composables/useBreadcrumbs";
+import api from "../api";
 
 const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -29,7 +30,7 @@ const fetchCategories = async () => {
 
   loading = true;
   try {
-    const { data: cats } = await axios.get("/categories");
+    const { data: cats } = await api.get("/categories");
     if (!Array.isArray(cats)) {
       console.error("Ответ от сервера не является массивом:", cats);
       categories.value = [];
@@ -37,7 +38,7 @@ const fetchCategories = async () => {
     }
 
     const promises = cats.map(async (cat) => {
-      const productsRes = await axios.get(`/${cat.url_key}`);
+      const productsRes = await api.get(`/${cat.url_key}`);
       return {
         id: cat.id,
         name: cat.name,

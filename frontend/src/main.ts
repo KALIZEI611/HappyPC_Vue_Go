@@ -5,7 +5,7 @@ import axios from "axios";
 import "./assets/styles.css";
 import { user } from "./utils/cache";
 
-axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || "";
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'https://happypcvuego-production.up.railway.app';
 axios.defaults.withCredentials = true;
 
 axios.interceptors.response.use(

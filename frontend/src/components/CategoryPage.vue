@@ -227,6 +227,7 @@ import axios from "axios";
 import ProductCard from "./ProductCard.vue";
 import { categoryProductsCache } from "../utils/cache";
 import { useBreadcrumbs } from "../composables/useBreadcrumbs";
+import api from "../api";
 
 const route = useRoute();
 const props = defineProps({
@@ -277,7 +278,7 @@ const fetchCategoryData = async (categoryId) => {
   loading.value = true;
   error.value = null;
   try {
-    const { data } = await axios.get(`/category/${categoryId}/products`);
+    const { data } = await api.get(`/category/${categoryId}/products`);
     if (!data.category) throw new Error("Категория не найдена");
     const categoryData = { ...data.category, icon: data.category.icon_url };
     category.value = categoryData;

@@ -1,8 +1,9 @@
 import axios from "axios";
+import api from "../api";
 
 const favoritesService = {
   async getFavorites() {
-    const { data } = await axios.get("/api/favorites");
+    const { data } = await api.get("/api/favorites");
     return data;
   },
   

@@ -35,6 +35,7 @@ import axios from "axios";
 import ProductCard from "./ProductCard.vue";
 import { allProductsCache } from "../utils/cache";
 import { useBreadcrumbs } from "../composables/useBreadcrumbs";
+import api from "../api";
 
 const props = defineProps({
   searchQuery: { type: String, default: "" },
@@ -60,10 +61,10 @@ const fetchAllProducts = async () => {
   isFetching = true;
   loading.value = true;
   try {
-    const { data: cats } = await axios.get("/categories");
+    const { data: cats } = await api.get("/categories");
     const promises = cats.map(async (cat) => {
       try {
-        const response = await axios.get(`/${cat.url_key}`);
+        const response = await api.get(`/${cat.url_key}`);
         return response.data;
       } catch {
         return [];
