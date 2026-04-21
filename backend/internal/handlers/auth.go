@@ -107,7 +107,8 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
         Value:    token,
         Path:     "/",
         HttpOnly: true,
-        SameSite: http.SameSiteLaxMode,
+        SameSite: http.SameSiteNoneMode,
+        Secure:   true, 
         MaxAge:   86400,
     })
 
@@ -116,6 +117,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
         "id":       user.ID,
         "username": user.Username,
         "email":    user.Email,
+        "token":    token,
     })
 }
 
@@ -155,7 +157,8 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
         Value:    token,
         Path:     "/",
         HttpOnly: true,
-        SameSite: http.SameSiteLaxMode,
+        SameSite: http.SameSiteNoneMode,
+        Secure:   true, 
         MaxAge:   86400,
     })
 
@@ -164,6 +167,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
         "id":       user.ID,
         "username": user.Username,
         "email":    user.Email,
+        "token":    token,
     })
 }
 

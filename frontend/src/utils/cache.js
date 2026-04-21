@@ -15,6 +15,10 @@ export const fetchUser = async () => {
       return user.value;
     })
     .catch((err) => {
+      // Если 401, очищаем токен
+      if (err.response?.status === 401) {
+        localStorage.removeItem('session_token');
+      }
       user.value = null;
       userPromise = null;
       throw err;
@@ -162,6 +166,7 @@ export const logout = async () => {
     console.error("Ошибка выхода:", err);
   } finally {
     clearUser();
+    localStorage.removeItem('session_token');
     clearAllCaches();
     window.location.href = "/";
   }

@@ -6,25 +6,13 @@
         <form @submit.prevent="register">
           <div class="form-group">
             <label>Имя пользователя</label>
-            <input
-              type="text"
-              v-model="username"
-              @input="validateUsername"
-              required
-            />
+            <input type="text" v-model="username" @input="validateUsername" required />
             <small class="hint">Максимум 10 символов</small>
-            <span v-if="usernameError" class="error-text">{{
-              usernameError
-            }}</span>
+            <span v-if="usernameError" class="error-text">{{ usernameError }}</span>
           </div>
           <div class="form-group">
             <label>Email</label>
-            <input
-              type="email"
-              v-model="email"
-              @input="validateEmail"
-              required
-            />
+            <input type="email" v-model="email" @input="validateEmail" required />
             <span v-if="emailError" class="error-text">{{ emailError }}</span>
           </div>
           <div class="form-group">
@@ -36,20 +24,14 @@
               required
             />
             <div class="password-requirements">
-              <small :class="{ valid: passwordValid.length }"
-                >✓ Минимум 8 символов</small
-              >
-              <small :class="{ valid: passwordValid.upper }"
-                >✓ Заглавная буква</small
-              >
+              <small :class="{ valid: passwordValid.length }">✓ Минимум 8 символов</small>
+              <small :class="{ valid: passwordValid.upper }">✓ Заглавная буква</small>
               <small :class="{ valid: passwordValid.digit }">✓ Цифра</small>
               <small :class="{ valid: passwordValid.special }"
                 >✓ Спецсимвол (!@#$%^&*)</small
               >
             </div>
-            <span v-if="passwordError" class="error-text">{{
-              passwordError
-            }}</span>
+            <span v-if="passwordError" class="error-text">{{ passwordError }}</span>
           </div>
           <button type="submit" :disabled="loading || !isFormValid">
             Зарегистрироваться
@@ -109,9 +91,7 @@ const validatePassword = () => {
   passwordValid.value.length = pwd.length >= 8;
   passwordValid.value.upper = /[A-Z]/.test(pwd);
   passwordValid.value.digit = /[0-9]/.test(pwd);
-  passwordValid.value.special = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(
-    pwd,
-  );
+  passwordValid.value.special = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd);
 
   if (pwd && !passwordValid.value.length) {
     passwordError.value = "Пароль должен содержать минимум 8 символов";
@@ -161,6 +141,11 @@ const register = async () => {
       email: email.value,
       password: password.value,
     });
+
+    if (response.data.token) {
+      localStorage.setItem("session_token", response.data.token);
+    }
+
     userCache.clear();
     await fetchUser();
     router.push("/");

@@ -44,6 +44,11 @@ const login = async () => {
       email: email.value,
       password: password.value,
     });
+
+    if (response.data.token) {
+      localStorage.setItem("session_token", response.data.token);
+    }
+
     userCache.clear();
     await fetchUser();
     router.push("/");

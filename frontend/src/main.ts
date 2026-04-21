@@ -8,6 +8,14 @@ import { user } from "./utils/cache";
 axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'https://happypcvuego-production.up.railway.app';
 axios.defaults.withCredentials = true;
 
+axios.interceptors.request.use(config => {
+    const token = localStorage.getItem('session_token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
 axios.interceptors.response.use(
   (response) => response,
   (error) => {
