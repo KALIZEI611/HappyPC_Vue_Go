@@ -100,7 +100,12 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
         UserID:    user.ID,
         ExpiresAt: time.Now().Add(24 * time.Hour),
     }
+    if err := h.sessionRepo.Create(session); err != nil {
+        http.Error(w, "Failed to create session", http.StatusInternalServerError)
+        return
+    }
     h.sessionRepo.Create(session)
+    
 
     http.SetCookie(w, &http.Cookie{
         Name:     "session_token",
@@ -149,6 +154,10 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
         Token:     token,
         UserID:    user.ID,
         ExpiresAt: time.Now().Add(24 * time.Hour),
+    }
+    if err := h.sessionRepo.Create(session); err != nil {
+        http.Error(w, "Failed to create session", http.StatusInternalServerError)
+        return
     }
     h.sessionRepo.Create(session)
 
