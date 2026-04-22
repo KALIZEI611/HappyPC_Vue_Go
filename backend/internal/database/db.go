@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"backend/internal/config"
 	"backend/internal/models"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 func ConnectDB() (*gorm.DB, error) {
@@ -31,9 +33,19 @@ func ConnectDB() (*gorm.DB, error) {
         dsn = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
             host, port, user, password, dbname)
     }
-    
+    newLogger := logger.New(
+        log.New(os.Stdout, "\r\n", log.LstdFlags),
+        logger.Config{
+            SlowThreshold:             200 * time.Millisecond,
+            LogLevel:                  logger.Info,
+            IgnoreRecordNotFoundError: true,
+            Colorful:                  true,
+        },
+    )
     log.Println("Attempting to connect to database...")
-    return gorm.Open(postgres.Open(dsn), &gorm.Config{})
+    return gorm.Open(postgres.Open(dsn), &gorm.Config{
+        Logger: newLogger,
+    })
 }
 
 // Вспомогательная функция для получения переменных с дефолтным значением

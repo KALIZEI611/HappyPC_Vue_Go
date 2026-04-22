@@ -43,8 +43,8 @@ type CartItem struct {
     CreatedAt time.Time      `json:"-"`
     UpdatedAt time.Time      `json:"-"`
     DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
-    UserID    uint           `json:"user_id" gorm:"not null;index"`
-    ProductID uint           `json:"product_id"`
+    UserID    uint `json:"user_id" gorm:"not null;index:idx_cart_user_product,priority:1"`
+    ProductID uint `json:"product_id" gorm:"index:idx_cart_user_product,priority:2"`
     Product   Product        `json:"product"`
     Quantity  int            `json:"quantity" gorm:"not null;default:1"`
 }
@@ -103,8 +103,8 @@ type Build struct {
 type Favorite struct {
 	ID        uint      `json:"id" gorm:"primarykey"`
 	CreatedAt time.Time `json:"created_at"`
-	UserID    uint      `json:"user_id" gorm:"not null;index"`
-	ProductID uint      `json:"product_id" gorm:"not null;index"`
+	UserID    uint `json:"user_id" gorm:"not null;index:idx_fav_user_product,priority:1"`
+    ProductID uint `json:"product_id" gorm:"not null;index:idx_fav_user_product,priority:2"`
 	Product   Product   `json:"product" gorm:"foreignKey:ProductID"`
 }
 
