@@ -2,14 +2,14 @@ FROM golang:latest AS builder
 
 WORKDIR /app
 
-# Копируем go.mod и go.sum из папки backend (контекст сборки - корень репозитория)
-COPY backend/go.mod backend/go.sum ./
+# Копируем go.mod и go.sum (они лежат рядом с Dockerfile)
+COPY go.mod go.sum ./
 RUN go mod download
 
 # Копируем весь код бэкенда
-COPY backend/ .
+COPY . .
 
-# Собираем бинарник, указывая путь к пакету с main.go
+# Собираем бинарник, указывая путь к main.go
 RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/server
 
 # Финальный этап
