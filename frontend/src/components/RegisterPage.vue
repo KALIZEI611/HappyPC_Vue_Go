@@ -156,7 +156,7 @@ const register = async () => {
   }
 
   try {
-    const response = await axios.post("/api/register", {
+    const response = await api.post("/api/register", {
       username: username.value,
       email: email.value,
       password: password.value,

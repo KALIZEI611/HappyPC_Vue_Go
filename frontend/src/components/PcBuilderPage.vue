@@ -173,7 +173,7 @@ const saveBuild = async () => {
       }
     }
 
-    await axios.post("/api/builds", {
+    await api.post("/api/builds", {
       name: buildName.value,
       components: componentsToSave,
     });
@@ -336,7 +336,7 @@ const addToCart = async () => {
   try {
     for (const key in selected.value) {
       if (selected.value[key]) {
-        await axios.post("/api/cart", {
+        await api.post("/api/cart", {
           product_id: selected.value[key].id,
           quantity: 1,
         });

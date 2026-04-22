@@ -14,7 +14,7 @@ import OrdersPage from "../components/OrdersPage.vue";
 import PcBuilderPage from "../components/PcBuilderPage.vue";
 import api from "../api";
 
-axios.defaults.withCredentials = true;
+api.defaults.withCredentials = true;
 
 const routes = [
   { path: "/", name: "Home", component: HomePage },

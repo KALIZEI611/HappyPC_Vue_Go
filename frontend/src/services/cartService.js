@@ -1,5 +1,4 @@
-// src/services/cartService.js
-import axios from "axios";
+// frontend/src/services/cartService.js
 import api from "../api";
 
 export const cartService = {
@@ -8,16 +7,15 @@ export const cartService = {
     return data;
   },
   async addToCart(productId, quantity = 1) {
-    await axios.post("/api/cart", { product_id: productId, quantity });
+    await api.post("/api/cart", { product_id: productId, quantity });
   },
   async updateCartItem(productId, quantity) {
-    await axios.put(`/api/cart/${productId}`, { quantity });
+    await api.put(`/api/cart/${productId}`, { quantity });
   },
   async removeCartItem(productId) {
-    await axios.delete(`/api/cart/${productId}`);
+    await api.delete(`/api/cart/${productId}`);
   },
   async clearCart() {
-    await axios.delete('/api/cart');
+    await api.delete("/api/cart");
   },
 };
-export default cartService;

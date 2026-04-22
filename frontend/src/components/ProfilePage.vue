@@ -511,7 +511,7 @@ const fetchFavorites = async () => {
 const deleteBuild = async (buildId) => {
   if (!confirm("Удалить эту сборку?")) return;
   try {
-    await axios.delete(`/api/builds/${buildId}`);
+    await api.delete(`/api/builds/${buildId}`);
     await fetchBuilds();
   } catch (err) {
     console.error("Ошибка удаления сборки:", err);
@@ -588,7 +588,7 @@ const sendFeedback = async () => {
   feedbackError.value = "";
 
   try {
-    await axios.post("/api/feedback", {
+    await api.post("/api/feedback", {
       subject: feedbackForm.subject,
       message: feedbackForm.message,
       copyToEmail: feedbackForm.copyToEmail,

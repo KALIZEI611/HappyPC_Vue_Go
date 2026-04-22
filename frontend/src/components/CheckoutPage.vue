@@ -193,6 +193,7 @@ import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import { user } from "../utils/cache";
+import api from "../api";
 
 const props = defineProps({
   cart: { type: Array, required: true },
@@ -379,7 +380,7 @@ const submitOrder = async () => {
       price: item.product.price,
     }));
 
-    const response = await axios.post("/api/orders", {
+    const response = await api.post("/api/orders", {
       items,
       delivery_method: deliveryMethod.value,
       delivery_address: deliveryMethod.value === "delivery" ? address.value : "",

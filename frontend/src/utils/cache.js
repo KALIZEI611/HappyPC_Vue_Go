@@ -1,13 +1,15 @@
 import axios from "axios";
 import { ref } from "vue";
+import api from "../api";
 
 export const user = ref(null);
 export let userPromise = null;
 
+
 export const fetchUser = async () => {
   if (user.value !== null) return user.value;
   if (userPromise) return userPromise;
-  userPromise = axios
+  userPromise = api
     .get("/api/me")
     .then((res) => {
       user.value = res.data;
@@ -15,7 +17,6 @@ export const fetchUser = async () => {
       return user.value;
     })
     .catch((err) => {
-      // Если 401, очищаем токен
       if (err.response?.status === 401) {
         localStorage.removeItem('session_token');
       }
@@ -161,7 +162,7 @@ export const categoriesCache = {
 
 export const logout = async () => {
   try {
-    await axios.post("/api/logout");
+    await api.post("/api/logout");
   } catch (err) {
     console.error("Ошибка выхода:", err);
   } finally {

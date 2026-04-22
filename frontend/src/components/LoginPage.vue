@@ -29,6 +29,7 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import { fetchUser, userCache } from "../utils/cache";
+import api from "../api";
 
 const router = useRouter();
 const email = ref("");
@@ -40,7 +41,7 @@ const login = async () => {
   loading.value = true;
   error.value = "";
   try {
-    const response = await axios.post("/api/login", {
+    const response = await api.post("/api/login", {
       email: email.value,
       password: password.value,
     });
