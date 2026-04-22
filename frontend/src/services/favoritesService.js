@@ -1,5 +1,5 @@
 // frontend/src/services/favoritesService.js
-import api from "../api"; // Импортируем НАШ настроенный api
+import api from "../api";
 
 const favoritesService = {
   async getFavorites() {

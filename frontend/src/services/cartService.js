@@ -19,3 +19,5 @@ export const cartService = {
     await api.delete("/api/cart");
   },
 };
+
+export default cartService;

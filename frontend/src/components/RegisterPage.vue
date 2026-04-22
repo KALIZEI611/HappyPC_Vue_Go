@@ -67,6 +67,7 @@ import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import { fetchUser, userCache } from "../utils/cache";
+import api from "../api";
 
 const router = useRouter();
 const username = ref("");
