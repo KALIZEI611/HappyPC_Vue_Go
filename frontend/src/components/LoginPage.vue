@@ -40,7 +40,7 @@ const login = async () => {
   loading.value = true;
   error.value = "";
   try {
-    await axios.post("/api/login", {
+    const response = await axios.post("/api/login", {
       email: email.value,
       password: password.value,
     });
