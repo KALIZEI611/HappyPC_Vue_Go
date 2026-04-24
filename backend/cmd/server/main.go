@@ -15,13 +15,11 @@ import (
 )
 
 func main() {
-    // Подключаемся к БД через переменные окружения
     db, err := database.ConnectDB()
     if err != nil {
         log.Fatal("Failed to connect to database:", err)
     }
     
-    // Выполняем миграции и заполняем начальными данными
     database.MigrateAndSeed(db)
 
     categoryRepo := repository.NewCategoryRepository(db)

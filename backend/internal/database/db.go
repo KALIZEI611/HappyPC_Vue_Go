@@ -16,10 +16,8 @@ import (
 )
 
 func ConnectDB() (*gorm.DB, error) {
-    // Пытаемся получить DATABASE_URL (приоритет 1)
     dsn := os.Getenv("DATABASE_URL")
     
-    // Если DATABASE_URL нет, собираем из отдельных переменных
     if dsn == "" {
         host := getEnv("DB_HOST", getEnv("PGHOST", "localhost"))
         port := getEnv("DB_PORT", getEnv("PGPORT", "5432"))
@@ -27,7 +25,6 @@ func ConnectDB() (*gorm.DB, error) {
         password := getEnv("DB_PASSWORD", getEnv("PGPASSWORD", ""))
         dbname := getEnv("DB_NAME", getEnv("PGDATABASE", "happypc"))
         
-        // Логируем для отладки (не забудьте убрать в production)
         log.Printf("Connecting to DB: host=%s port=%s user=%s dbname=%s", host, port, user, dbname)
         
         dsn = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
@@ -48,7 +45,6 @@ func ConnectDB() (*gorm.DB, error) {
     })
 }
 
-// Вспомогательная функция для получения переменных с дефолтным значением
 func getEnv(keys ...string) string {
     for _, key := range keys {
         if value := os.Getenv(key); value != "" {
@@ -59,7 +55,6 @@ func getEnv(keys ...string) string {
 }
 
 func MigrateAndSeed(db *gorm.DB) {
-    // Миграции
     if err := db.AutoMigrate(
         &models.Category{}, 
         &models.Product{}, 
@@ -75,7 +70,6 @@ func MigrateAndSeed(db *gorm.DB) {
         log.Fatal("Migration failed:", err)
     }
 
-    // Seed данных
     seedCategories(db)
     seedProducts(db)
     

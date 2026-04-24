@@ -198,13 +198,11 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
     var token string
 
-    // 1. Пытаемся получить токен из заголовка Authorization
     authHeader := r.Header.Get("Authorization")
     if strings.HasPrefix(authHeader, "Bearer ") {
         token = strings.TrimPrefix(authHeader, "Bearer ")
     }
 
-    // 2. Если в заголовке нет, пробуем получить из куки
     if token == "" {
         cookie, err := r.Cookie("session_token")
         if err == nil {
@@ -212,27 +210,23 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
         }
     }
 
-    // 3. Если токен так и не найден, возвращаем 401
     if token == "" {
         http.Error(w, "Unauthorized", http.StatusUnauthorized)
         return
     }
 
-    // 4. Ищем сессию по токену
     session, err := h.sessionRepo.FindByToken(token)
     if err != nil {
         http.Error(w, "Unauthorized", http.StatusUnauthorized)
         return
     }
 
-    // 5. Получаем пользователя
     user, err := h.userRepo.FindByID(session.UserID)
     if err != nil {
         http.Error(w, "User not found", http.StatusNotFound)
         return
     }
 
-    // 6. Отправляем ответ
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(map[string]interface{}{
         "id":         user.ID,

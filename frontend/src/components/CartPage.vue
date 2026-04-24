@@ -29,7 +29,7 @@
               <button
                 @click="decrement(item.product.id)"
                 class="qty-btn"
-                :disabled="updatingItem === item.product.id"
+                :disabled="isUpdating(item.product.id) || isCooldown(item.product.id)"
               >
                 <i class="fas fa-minus"></i>
               </button>
@@ -37,7 +37,7 @@
               <button
                 @click="increment(item.product.id)"
                 class="qty-btn"
-                :disabled="updatingItem === item.product.id"
+                :disabled="isUpdating(item.product.id) || isCooldown(item.product.id)"
               >
                 <i class="fas fa-plus"></i>
               </button>
@@ -50,7 +50,7 @@
             <button
               @click="removeItem(item.product.id)"
               class="remove-btn"
-              :disabled="updatingItem === item.product.id"
+              :disabled="isUpdating(item.product.id)"
             >
               <i class="fas fa-trash"></i>
             </button>
@@ -76,7 +76,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick } from "vue";
+import { ref, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
@@ -87,24 +87,72 @@ const props = defineProps({
 
 const emit = defineEmits(["update-cart", "remove-from-cart"]);
 
-// Локальное состояние корзины для мгновенного отклика
 const localCart = ref([]);
-const updatingItem = ref(null);
-const isSyncing = ref(false); // Флаг синхронизации
-
-// Инициализация локальной корзины
+const pendingOperations = ref(new Map());
+const cooldownMap = ref(new Map());
+const isSyncing = ref(false);
+const pendingClicks = ref(new Map());
+const COOLDOWN_MS = 400;
+const MAX_PENDING_CLICKS = 2;
 const initLocalCart = () => {
   localCart.value = [...props.cart];
 };
 initLocalCart();
 
-// Мягкая синхронизация с родительской корзиной (сохраняем порядок)
+const isUpdating = (productId) => {
+  return pendingOperations.value.has(productId);
+};
+
+const isCooldown = (productId) => {
+  return cooldownMap.value.get(productId) || false;
+};
+
+const setCooldown = (productId) => {
+  cooldownMap.value.set(productId, true);
+  setTimeout(() => {
+    cooldownMap.value.delete(productId);
+  }, COOLDOWN_MS);
+};
+
+const queueOperation = async (productId, operation, delta) => {
+  const currentClicks = pendingClicks.value.get(productId) || 0;
+
+  if (currentClicks >= MAX_PENDING_CLICKS) {
+    console.warn(`Слишком быстрые клики для товара ${productId}, игнорируем`);
+    return;
+  }
+
+  pendingClicks.value.set(productId, currentClicks + 1);
+
+  const currentOp = pendingOperations.value.get(productId);
+  if (currentOp) {
+    await currentOp.catch(() => {});
+  }
+
+  const newCount = (pendingClicks.value.get(productId) || 1) - 1;
+  if (newCount <= 0) {
+    pendingClicks.value.delete(productId);
+  } else {
+    pendingClicks.value.set(productId, newCount);
+  }
+
+  const newOp = operation();
+  pendingOperations.value.set(productId, newOp);
+
+  try {
+    await newOp;
+  } finally {
+    if (pendingOperations.value.get(productId) === newOp) {
+      pendingOperations.value.delete(productId);
+    }
+  }
+};
+
 watch(
   () => props.cart,
   (newCart) => {
     if (isSyncing.value) return;
 
-    // Обновляем только количества, сохраняя порядок
     for (const localItem of localCart.value) {
       const serverItem = newCart.find((i) => i.product.id === localItem.product.id);
       if (serverItem && localItem.quantity !== serverItem.quantity) {
@@ -112,7 +160,6 @@ watch(
       }
     }
 
-    // Добавляем новые товары
     for (const serverItem of newCart) {
       const exists = localCart.value.some((i) => i.product.id === serverItem.product.id);
       if (!exists) {
@@ -120,12 +167,10 @@ watch(
       }
     }
 
-    // Удаляем товары, которых нет в серверной корзине
     localCart.value = localCart.value.filter((localItem) =>
       newCart.some((serverItem) => serverItem.product.id === localItem.product.id)
     );
 
-    // Триггер реактивности
     localCart.value = [...localCart.value];
   },
   { deep: true }
@@ -139,111 +184,115 @@ const totalPrice = computed(() =>
   localCart.value.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
 );
 
-const increment = async (productId) => {
-  const item = localCart.value.find((i) => i.product.id === productId);
-  if (!item) return;
-
-  // Сохраняем старое значение для отката
-  const oldQuantity = item.quantity;
-
-  // Мгновенно обновляем локально
-  item.quantity += 1;
-  localCart.value = [...localCart.value];
-
-  // Отправляем запрос на сервер
-  updatingItem.value = productId;
-  isSyncing.value = true;
-
-  try {
-    await emit("update-cart", productId, item.quantity);
-  } catch (err) {
-    // Откат при ошибке
-    item.quantity = oldQuantity;
-    localCart.value = [...localCart.value];
-    console.error("Ошибка обновления корзины:", err);
-  } finally {
-    updatingItem.value = null;
-    isSyncing.value = false;
+const increment = (productId) => {
+  if (isCooldown(productId)) {
+    console.warn(`Кулдаун для товара ${productId}, клик игнорируется`);
+    return;
   }
+
+  setCooldown(productId);
+
+  queueOperation(
+    productId,
+    async () => {
+      const item = localCart.value.find((i) => i.product.id === productId);
+      if (!item) return;
+
+      const oldQuantity = item.quantity;
+      item.quantity += 1;
+      localCart.value = [...localCart.value];
+
+      isSyncing.value = true;
+      try {
+        await emit("update-cart", productId, item.quantity);
+      } catch (err) {
+        item.quantity = oldQuantity;
+        localCart.value = [...localCart.value];
+        console.error("Ошибка обновления корзины:", err);
+      } finally {
+        isSyncing.value = false;
+      }
+    },
+    1
+  );
 };
 
-const decrement = async (productId) => {
-  const item = localCart.value.find((i) => i.product.id === productId);
-  if (!item) return;
+const decrement = (productId) => {
+  if (isCooldown(productId)) {
+    console.warn(`Кулдаун для товара ${productId}, клик игнорируется`);
+    return;
+  }
 
-  const oldQuantity = item.quantity;
-  const newQty = item.quantity - 1;
+  setCooldown(productId);
 
-  if (newQty <= 0) {
-    // Удаляем товар
-    const removedItem = { ...item };
+  queueOperation(
+    productId,
+    async () => {
+      const item = localCart.value.find((i) => i.product.id === productId);
+      if (!item) return;
+
+      const oldQuantity = item.quantity;
+      const newQty = item.quantity - 1;
+
+      if (newQty <= 0) {
+        const removedItem = { ...item };
+        localCart.value = localCart.value.filter((i) => i.product.id !== productId);
+
+        isSyncing.value = true;
+        try {
+          await emit("remove-from-cart", productId);
+        } catch (err) {
+          localCart.value.push(removedItem);
+          localCart.value = [...localCart.value];
+          console.error("Ошибка удаления из корзины:", err);
+        } finally {
+          isSyncing.value = false;
+        }
+      } else {
+        item.quantity = newQty;
+        localCart.value = [...localCart.value];
+
+        isSyncing.value = true;
+        try {
+          await emit("update-cart", productId, newQty);
+        } catch (err) {
+          item.quantity = oldQuantity;
+          localCart.value = [...localCart.value];
+          console.error("Ошибка обновления корзины:", err);
+        } finally {
+          isSyncing.value = false;
+        }
+      }
+    },
+    -1
+  );
+};
+
+const removeItem = (productId) => {
+  queueOperation(productId, async () => {
+    const removedItem = localCart.value.find((i) => i.product.id === productId);
+    if (!removedItem) return;
+
+    const itemCopy = { ...removedItem };
     localCart.value = localCart.value.filter((i) => i.product.id !== productId);
 
-    updatingItem.value = productId;
     isSyncing.value = true;
-
     try {
       await emit("remove-from-cart", productId);
     } catch (err) {
-      // Откат при ошибке
-      localCart.value.push(removedItem);
+      localCart.value.push(itemCopy);
       localCart.value = [...localCart.value];
       console.error("Ошибка удаления из корзины:", err);
     } finally {
-      updatingItem.value = null;
       isSyncing.value = false;
     }
-  } else {
-    item.quantity = newQty;
-    localCart.value = [...localCart.value];
-
-    updatingItem.value = productId;
-    isSyncing.value = true;
-
-    try {
-      await emit("update-cart", productId, newQty);
-    } catch (err) {
-      // Откат при ошибке
-      item.quantity = oldQuantity;
-      localCart.value = [...localCart.value];
-      console.error("Ошибка обновления корзины:", err);
-    } finally {
-      updatingItem.value = null;
-      isSyncing.value = false;
-    }
-  }
-};
-
-const removeItem = async (productId) => {
-  const removedItem = localCart.value.find((i) => i.product.id === productId);
-  if (!removedItem) return;
-
-  // Сохраняем копию для отката
-  const itemCopy = { ...removedItem };
-  localCart.value = localCart.value.filter((i) => i.product.id !== productId);
-
-  updatingItem.value = productId;
-  isSyncing.value = true;
-
-  try {
-    await emit("remove-from-cart", productId);
-  } catch (err) {
-    // Откат при ошибке
-    localCart.value.push(itemCopy);
-    localCart.value = [...localCart.value];
-    console.error("Ошибка удаления из корзины:", err);
-  } finally {
-    updatingItem.value = null;
-    isSyncing.value = false;
-  }
+  });
 };
 
 const goToCheckout = () => {
   router.push("/checkout");
 };
 </script>
-
-
 <style scoped>
 .cart-item {
   transition: all 0.2s ease;

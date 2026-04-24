@@ -19,13 +19,11 @@ func AuthMiddleware(sessionRepo *repository.SessionRepository, userRepo *reposit
         return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
             var token string
 
-            // 1. Пытаемся получить токен из заголовка Authorization
             authHeader := r.Header.Get("Authorization")
             if strings.HasPrefix(authHeader, "Bearer ") {
                 token = strings.TrimPrefix(authHeader, "Bearer ")
             }
 
-            // 2. Если в заголовке нет, пробуем получить из куки
             if token == "" {
                 cookie, err := r.Cookie("session_token")
                 if err == nil {
@@ -44,7 +42,6 @@ func AuthMiddleware(sessionRepo *repository.SessionRepository, userRepo *reposit
                 return
             }
 
-            // Обновляем время жизни сессии
             session.ExpiresAt = time.Now().Add(15 * time.Minute)
             sessionRepo.Update(session)
 

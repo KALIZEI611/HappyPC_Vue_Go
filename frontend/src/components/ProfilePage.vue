@@ -191,7 +191,6 @@
                   </div>
                 </router-link>
 
-                <!-- Контролы количества -->
                 <div class="favorite-actions">
                   <div
                     v-if="getQuantity(item.product_id || item.Product?.id) > 0"
@@ -334,7 +333,6 @@ import favoritesService from "../services/favoritesService";
 import cartService from "../services/cartService";
 import api from "../api";
 
-// Определяем emit
 const emit = defineEmits(["add-to-cart", "update-cart", "cart-cleared"]);
 
 const router = useRouter();
@@ -350,7 +348,6 @@ const favorites = ref([]);
 const favoritesLoading = ref(false);
 const cart = ref([]);
 
-// Функция для получения количества товара в корзине
 const getQuantity = (productId) => {
   const cartItem = cart.value.find(
     (item) => item.product?.id === productId || item.product_id === productId,
@@ -358,7 +355,6 @@ const getQuantity = (productId) => {
   return cartItem ? cartItem.quantity : 0;
 };
 
-// Функция для обновления количества в корзине
 const updateCartQuantity = async (productId, newQuantity) => {
   if (!user.value) {
     router.push("/login");
@@ -378,7 +374,6 @@ const updateCartQuantity = async (productId, newQuantity) => {
   }
 };
 
-// Функция для загрузки корзины
 const fetchCart = async () => {
   if (!user.value) return;
   try {
@@ -567,7 +562,6 @@ const removeFromFavorites = async (productId) => {
 const addToCartFromFavorites = async (product) => {
   if (!product) return;
   emit("add-to-cart", product);
-  // Обновляем корзину после добавления
   setTimeout(() => {
     fetchCart();
   }, 500);
@@ -627,7 +621,7 @@ onMounted(async () => {
   await fetchUser();
   userData.value = user.value;
   loading.value = false;
-  await fetchCart(); // Загружаем корзину при монтировании
+  await fetchCart();
   if (activeTab.value === "orders") {
     await fetchOrders();
   }

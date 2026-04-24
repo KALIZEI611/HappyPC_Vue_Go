@@ -56,7 +56,7 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   if (to.meta.requiresAuth) {
     try {
-      const { data } = await api.get('/api/me');  // Используем api вместо axios
+      const { data } = await api.get('/api/me');
       if (data) {
         next();
       } else {
