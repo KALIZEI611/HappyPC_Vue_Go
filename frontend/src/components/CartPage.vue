@@ -3,7 +3,7 @@
     <div class="container">
       <h1>Корзина</h1>
 
-      <div v-if="cart.length === 0" class="empty-cart">
+      <div v-if="localCart.length === 0" class="empty-cart">
         <i class="fas fa-shopping-cart"></i>
         <p>Корзина пуста</p>
         <router-link to="/" class="continue-shopping">Продолжить покупки</router-link>
@@ -11,7 +11,7 @@
 
       <div v-else class="cart-content">
         <div class="cart-items">
-          <div v-for="item in cart" :key="item.product.id" class="cart-item">
+          <div v-for="item in localCart" :key="item.product.id" class="cart-item">
             <router-link :to="'/product/' + item.product.id" class="item-image-link">
               <div class="item-image">
                 <img :src="item.product.image" :alt="item.product.name" />
@@ -26,11 +26,19 @@
             </div>
 
             <div class="quantity-controls">
-              <button @click="decrement(item.product.id)" class="qty-btn">
+              <button
+                @click="decrement(item.product.id)"
+                class="qty-btn"
+                :disabled="updatingItem === item.product.id"
+              >
                 <i class="fas fa-minus"></i>
               </button>
               <span class="quantity">{{ item.quantity }}</span>
-              <button @click="increment(item.product.id)" class="qty-btn">
+              <button
+                @click="increment(item.product.id)"
+                class="qty-btn"
+                :disabled="updatingItem === item.product.id"
+              >
                 <i class="fas fa-plus"></i>
               </button>
             </div>
@@ -39,7 +47,11 @@
               {{ (item.product.price * item.quantity).toLocaleString() }} ₽
             </div>
 
-            <button @click="removeItem(item.product.id)" class="remove-btn">
+            <button
+              @click="removeItem(item.product.id)"
+              class="remove-btn"
+              :disabled="updatingItem === item.product.id"
+            >
               <i class="fas fa-trash"></i>
             </button>
           </div>
@@ -64,7 +76,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from "vue";
+import { ref, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
@@ -75,37 +87,122 @@ const props = defineProps({
 
 const emit = defineEmits(["update-cart", "remove-from-cart"]);
 
+// Локальное состояние корзины для мгновенного отклика
+const localCart = ref([...props.cart]);
+const updatingItem = ref(null); // ID товара, который сейчас обновляется
+
+// Следим за изменениями родительской корзины
+watch(
+  () => props.cart,
+  (newCart) => {
+    localCart.value = [...newCart];
+  },
+  { deep: true }
+);
+
 const totalItems = computed(() =>
-  props.cart.reduce((sum, item) => sum + item.quantity, 0)
+  localCart.value.reduce((sum, item) => sum + item.quantity, 0)
 );
 
 const totalPrice = computed(() =>
-  props.cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
+  localCart.value.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
 );
 
-const increment = (productId) => {
-  const item = props.cart.find((i) => i.product.id === productId);
-  if (item) emit("update-cart", productId, item.quantity + 1);
+const increment = async (productId) => {
+  const item = localCart.value.find((i) => i.product.id === productId);
+  if (!item) return;
+
+  // Мгновенно обновляем локально
+  item.quantity += 1;
+  localCart.value = [...localCart.value]; // Триггер реактивности
+
+  // Отправляем запрос на сервер
+  updatingItem.value = productId;
+  try {
+    await emit("update-cart", productId, item.quantity);
+  } catch (err) {
+    // Откат при ошибке
+    item.quantity -= 1;
+    localCart.value = [...localCart.value];
+    console.error("Ошибка обновления корзины:", err);
+  } finally {
+    updatingItem.value = null;
+  }
+};
+
+const decrement = async (productId) => {
+  const item = localCart.value.find((i) => i.product.id === productId);
+  if (!item) return;
+
+  const newQty = item.quantity - 1;
+
+  if (newQty <= 0) {
+    // Удаляем товар
+    localCart.value = localCart.value.filter((i) => i.product.id !== productId);
+  } else {
+    item.quantity = newQty;
+    localCart.value = [...localCart.value];
+  }
+
+  updatingItem.value = productId;
+  try {
+    if (newQty <= 0) {
+      await emit("remove-from-cart", productId);
+    } else {
+      await emit("update-cart", productId, newQty);
+    }
+  } catch (err) {
+    // Откат при ошибке
+    if (newQty <= 0) {
+      // Восстанавливаем удалённый товар
+      const originalItem = props.cart.find((i) => i.product.id === productId);
+      if (originalItem) {
+        localCart.value.push({ ...originalItem });
+        localCart.value = [...localCart.value];
+      }
+    } else {
+      item.quantity = item.quantity + 1;
+      localCart.value = [...localCart.value];
+    }
+    console.error("Ошибка обновления корзины:", err);
+  } finally {
+    updatingItem.value = null;
+  }
+};
+
+const removeItem = async (productId) => {
+  // Мгновенно удаляем локально
+  const removedItem = localCart.value.find((i) => i.product.id === productId);
+  localCart.value = localCart.value.filter((i) => i.product.id !== productId);
+
+  updatingItem.value = productId;
+  try {
+    await emit("remove-from-cart", productId);
+  } catch (err) {
+    // Откат при ошибке
+    if (removedItem) {
+      localCart.value.push({ ...removedItem });
+      localCart.value = [...localCart.value];
+    }
+    console.error("Ошибка удаления из корзины:", err);
+  } finally {
+    updatingItem.value = null;
+  }
 };
 
 const goToCheckout = () => {
   router.push("/checkout");
 };
-
-const decrement = (productId) => {
-  const item = props.cart.find((i) => i.product.id === productId);
-  if (item) {
-    const newQty = item.quantity - 1;
-    emit("update-cart", productId, newQty);
-  }
-};
-
-const removeItem = (productId) => {
-  emit("remove-from-cart", productId);
-};
 </script>
 
 <style scoped>
+.cart-item {
+  transition: all 0.2s ease;
+}
+
+.quantity-controls button:active {
+  transform: scale(0.95);
+}
 .item-image-link,
 .item-title-link {
   text-decoration: none;
