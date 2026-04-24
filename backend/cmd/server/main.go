@@ -88,6 +88,7 @@ func main() {
             r.Delete("/favorites/{id}", favoriteHandler.RemoveFavorite)
             r.Post("/favorites/toggle", favoriteHandler.ToggleFavorite)
             r.Post("/feedback", feedbackHandler.SendFeedback)
+            r.Put("/user/profile", authHandler.UpdateProfile)
         })
     })
 

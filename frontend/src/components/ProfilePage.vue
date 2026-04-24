@@ -21,10 +21,19 @@
         </aside>
 
         <main class="profile-content">
+          <!-- Замени существующий блок с activeTab === 'profile' на этот -->
           <div v-if="activeTab === 'profile'" class="tab-content">
-            <h2>Мой профиль</h2>
+            <div class="profile-header">
+              <h2>Мой профиль</h2>
+              <button v-if="!isEditing" @click="startEditing" class="edit-profile-btn">
+                <i class="fas fa-pen"></i> Редактировать
+              </button>
+            </div>
+
             <div v-if="loading" class="loading">Загрузка...</div>
-            <div v-else-if="user" class="profile-info">
+
+            <!-- Режим просмотра -->
+            <div v-else-if="user && !isEditing" class="profile-info">
               <div class="info-row">
                 <strong>Имя пользователя:</strong>
                 <span>{{ user.username }}</span>
@@ -38,9 +47,85 @@
                 <span>{{ formatDate(user.created_at) }}</span>
               </div>
             </div>
+
+            <!-- Режим редактирования -->
+            <div v-else-if="user && isEditing" class="profile-edit-form">
+              <form @submit.prevent="updateProfile">
+                <div class="form-group">
+                  <label for="username">Имя пользователя</label>
+                  <input
+                    id="username"
+                    type="text"
+                    v-model="editForm.username"
+                    required
+                    maxlength="50"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="email">Email</label>
+                  <input id="email" type="email" v-model="editForm.email" required />
+                </div>
+
+                <div class="form-group">
+                  <label for="currentPassword"
+                    >Текущий пароль <span class="required">*</span></label
+                  >
+                  <input
+                    id="currentPassword"
+                    type="password"
+                    v-model="editForm.currentPassword"
+                    required
+                    placeholder="Введите текущий пароль для подтверждения"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="newPassword"
+                    >Новый пароль (оставьте пустым, если не хотите менять)</label
+                  >
+                  <input
+                    id="newPassword"
+                    type="password"
+                    v-model="editForm.newPassword"
+                    placeholder="Новый пароль"
+                  />
+                </div>
+
+                <div class="form-group" v-if="editForm.newPassword">
+                  <label for="confirmPassword">Подтверждение нового пароля</label>
+                  <input
+                    id="confirmPassword"
+                    type="password"
+                    v-model="editForm.confirmPassword"
+                    placeholder="Повторите новый пароль"
+                  />
+                  <small
+                    v-if="editForm.newPassword !== editForm.confirmPassword"
+                    class="error-text"
+                  >
+                    Пароли не совпадают
+                  </small>
+                </div>
+
+                <div class="form-actions">
+                  <button type="submit" :disabled="updateLoading" class="save-btn">
+                    {{ updateLoading ? "Сохранение..." : "Сохранить изменения" }}
+                  </button>
+                  <button type="button" @click="cancelEditing" class="cancel-btn">
+                    Отмена
+                  </button>
+                </div>
+
+                <div v-if="updateError" class="error-message">{{ updateError }}</div>
+                <div v-if="updateSuccess" class="success-message">
+                  {{ updateSuccess }}
+                </div>
+              </form>
+            </div>
+
             <div v-else class="error">Не удалось загрузить данные профиля</div>
           </div>
-
           <div v-else-if="activeTab === 'orders'" class="tab-content">
             <h2>Мои заказы</h2>
             <div v-if="ordersLoading" class="loading">Загрузка заказов...</div>
@@ -51,43 +136,26 @@
               <div v-for="order in orders" :key="order.id" class="order-card">
                 <div class="order-header">
                   <span class="order-id">Заказ №{{ order.id }}</span>
-                  <span class="order-date">{{
-                    formatDate(order.created_at)
-                  }}</span>
+                  <span class="order-date">{{ formatDate(order.created_at) }}</span>
                   <span class="order-status" :class="'status-' + order.status">
                     {{ getStatusText(order.status) }}
                   </span>
                 </div>
                 <div class="order-items">
-                  <div
-                    v-for="item in order.items"
-                    :key="item.id"
-                    class="order-item"
-                  >
-                    <router-link
-                      :to="'/product/' + item.product_id"
-                      class="item-name"
-                    >
+                  <div v-for="item in order.items" :key="item.id" class="order-item">
+                    <router-link :to="'/product/' + item.product_id" class="item-name">
                       {{ getProductName(item.product_id) }}
                     </router-link>
                     <span class="item-quantity">{{ item.quantity }} шт.</span>
-                    <span class="item-price"
-                      >{{ item.price.toLocaleString() }} ₽</span
-                    >
+                    <span class="item-price">{{ item.price.toLocaleString() }} ₽</span>
                     <span class="item-total"
-                      >{{
-                        (item.price * item.quantity).toLocaleString()
-                      }}
-                      ₽</span
+                      >{{ (item.price * item.quantity).toLocaleString() }} ₽</span
                     >
                   </div>
                 </div>
                 <div class="order-footer">
                   <div class="delivery-info">
-                    <span
-                      >Доставка:
-                      {{ getDeliveryText(order.delivery_method) }}</span
-                    >
+                    <span>Доставка: {{ getDeliveryText(order.delivery_method) }}</span>
                     <span v-if="order.delivery_address"
                       >({{ order.delivery_address }})</span
                     >
@@ -113,10 +181,7 @@
               <div v-for="build in builds" :key="build.id" class="build-card">
                 <div class="build-header">
                   <h3>{{ build.name }}</h3>
-                  <button
-                    @click="deleteBuild(build.id)"
-                    class="delete-build-btn"
-                  >
+                  <button @click="deleteBuild(build.id)" class="delete-build-btn">
                     <i class="fas fa-trash"></i>
                   </button>
                 </div>
@@ -131,13 +196,8 @@
                   </div>
                 </div>
                 <div class="build-footer">
-                  <span class="build-date">{{
-                    formatDate(build.created_at)
-                  }}</span>
-                  <button
-                    @click="loadBuild(build.components)"
-                    class="load-build-btn"
-                  >
+                  <span class="build-date">{{ formatDate(build.created_at) }}</span>
+                  <button @click="loadBuild(build.components)" class="load-build-btn">
                     Загрузить сборку
                   </button>
                 </div>
@@ -152,20 +212,12 @@
             <div v-else-if="favorites.length === 0" class="no-favorites">
               <i class="far fa-heart"></i>
               <p>У вас пока нет избранных товаров</p>
-              <router-link to="/" class="browse-link"
-                >Перейти к покупкам</router-link
-              >
+              <router-link to="/" class="browse-link">Перейти к покупкам</router-link>
             </div>
             <div v-else class="favorites-grid">
-              <div
-                v-for="item in favorites"
-                :key="item.id"
-                class="favorite-item"
-              >
+              <div v-for="item in favorites" :key="item.id" class="favorite-item">
                 <button
-                  @click="
-                    removeFromFavorites(item.product_id || item.Product?.id)
-                  "
+                  @click="removeFromFavorites(item.product_id || item.Product?.id)"
                   class="remove-favorite"
                   title="Удалить из избранного"
                 >
@@ -182,11 +234,7 @@
                   />
                   <h3>{{ item.product?.name || item.Product?.name }}</h3>
                   <div class="price">
-                    {{
-                      (
-                        item.product?.price || item.Product?.price
-                      ).toLocaleString()
-                    }}
+                    {{ (item.product?.price || item.Product?.price).toLocaleString() }}
                     ₽
                   </div>
                 </router-link>
@@ -200,7 +248,7 @@
                       @click="
                         updateCartQuantity(
                           item.product_id || item.Product?.id,
-                          getQuantity(item.product_id || item.Product?.id) - 1,
+                          getQuantity(item.product_id || item.Product?.id) - 1
                         )
                       "
                       class="qty-btn"
@@ -214,7 +262,7 @@
                       @click="
                         updateCartQuantity(
                           item.product_id || item.Product?.id,
-                          getQuantity(item.product_id || item.Product?.id) + 1,
+                          getQuantity(item.product_id || item.Product?.id) + 1
                         )
                       "
                       class="qty-btn"
@@ -224,9 +272,7 @@
                   </div>
                   <button
                     v-else
-                    @click="
-                      addToCartFromFavorites(item.product || item.Product)
-                    "
+                    @click="addToCartFromFavorites(item.product || item.Product)"
                     class="add-to-cart-fav"
                   >
                     <i class="fas fa-cart-plus"></i> В корзину
@@ -245,9 +291,7 @@
                   <select id="subject" v-model="feedbackForm.subject" required>
                     <option value="">Выберите тему</option>
                     <option value="Вопрос о товаре">Вопрос о товаре</option>
-                    <option value="Проблема с заказом">
-                      Проблема с заказом
-                    </option>
+                    <option value="Проблема с заказом">Проблема с заказом</option>
                     <option value="Предложение">Предложение</option>
                     <option value="Другое">Другое</option>
                   </select>
@@ -292,26 +336,15 @@
                 <ul>
                   <li>
                     <strong>Как долго обрабатывается заказ?</strong>
-                    <p>
-                      Обычно заказ обрабатывается в течение 1-2 рабочих дней.
-                    </p>
+                    <p>Обычно заказ обрабатывается в течение 1-2 рабочих дней.</p>
                   </li>
                   <li>
-                    <strong
-                      >Можно ли изменить адрес доставки после
-                      оформления?</strong
-                    >
-                    <p>
-                      Да, свяжитесь с нами в течение 1 часа после оформления
-                      заказа.
-                    </p>
+                    <strong>Можно ли изменить адрес доставки после оформления?</strong>
+                    <p>Да, свяжитесь с нами в течение 1 часа после оформления заказа.</p>
                   </li>
                   <li>
                     <strong>Как отследить статус заказа?</strong>
-                    <p>
-                      Вы можете посмотреть статус в разделе «Мои заказы» в
-                      профиле.
-                    </p>
+                    <p>Вы можете посмотреть статус в разделе «Мои заказы» в профиле.</p>
                   </li>
                 </ul>
               </div>
@@ -348,9 +381,90 @@ const favorites = ref([]);
 const favoritesLoading = ref(false);
 const cart = ref([]);
 
+const isEditing = ref(false);
+const updateLoading = ref(false);
+const updateError = ref("");
+const updateSuccess = ref("");
+const editForm = reactive({
+  username: "",
+  email: "",
+  currentPassword: "",
+  newPassword: "",
+  confirmPassword: "",
+});
+
+const startEditing = () => {
+  if (user.value) {
+    editForm.username = user.value.username;
+    editForm.email = user.value.email;
+    editForm.currentPassword = "";
+    editForm.newPassword = "";
+    editForm.confirmPassword = "";
+    updateError.value = "";
+    updateSuccess.value = "";
+    isEditing.value = true;
+  }
+};
+
+const cancelEditing = () => {
+  isEditing.value = false;
+  editForm.currentPassword = "";
+  editForm.newPassword = "";
+  editForm.confirmPassword = "";
+  updateError.value = "";
+  updateSuccess.value = "";
+};
+
+const updateProfile = async () => {
+  updateError.value = "";
+  updateSuccess.value = "";
+
+  // Валидация
+  if (!editForm.currentPassword) {
+    updateError.value = "Введите текущий пароль для подтверждения";
+    return;
+  }
+
+  if (editForm.newPassword && editForm.newPassword !== editForm.confirmPassword) {
+    updateError.value = "Новый пароль и подтверждение не совпадают";
+    return;
+  }
+
+  if (editForm.newPassword && editForm.newPassword.length < 6) {
+    updateError.value = "Новый пароль должен содержать минимум 6 символов";
+    return;
+  }
+
+  updateLoading.value = true;
+
+  try {
+    const response = await api.put("/api/user/profile", {
+      username: editForm.username,
+      email: editForm.email,
+      current_password: editForm.currentPassword,
+      new_password: editForm.newPassword || undefined,
+    });
+
+    // Обновляем данные пользователя в кэше
+    user.value = response.data.user;
+    userCache.set(response.data.user);
+
+    updateSuccess.value = "Профиль успешно обновлён!";
+
+    setTimeout(() => {
+      updateSuccess.value = "";
+      isEditing.value = false;
+    }, 2000);
+  } catch (err) {
+    updateError.value = err.response?.data || "Ошибка обновления профиля";
+  } finally {
+    updateLoading.value = false;
+  }
+};
+
 const getQuantity = (productId) => {
   const cartItem = cart.value.find(
-    (item) => item.product?.id === productId || item.product_id === productId,
+    (item) => item.product?.id === productId || item.product_id === productId
   );
   return cartItem ? cartItem.quantity : 0;
 };
@@ -587,8 +701,7 @@ const sendFeedback = async () => {
       message: feedbackForm.message,
       copyToEmail: feedbackForm.copyToEmail,
     });
-    feedbackSuccess.value =
-      "Сообщение отправлено! Мы ответим вам в ближайшее время.";
+    feedbackSuccess.value = "Сообщение отправлено! Мы ответим вам в ближайшее время.";
     feedbackForm.subject = "";
     feedbackForm.message = "";
     feedbackForm.copyToEmail = false;
@@ -1035,9 +1148,7 @@ onMounted(async () => {
   border-radius: 12px;
   padding: 16px;
   border: 1px solid #e0e0e0;
-  transition:
-    transform 0.2s,
-    box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .favorite-item:hover {
@@ -1371,6 +1482,117 @@ onMounted(async () => {
 .no-builds p {
   color: #666;
   font-size: 1.1rem;
+}
+
+/* Добавь в конец <style> */
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.profile-header h2 {
+  margin-bottom: 0;
+}
+
+.edit-profile-btn {
+  padding: 8px 20px;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  transition: background-color 0.3s;
+}
+
+.edit-profile-btn:hover {
+  background-color: #357abd;
+}
+
+.profile-edit-form {
+  background: #f8f9fa;
+  padding: 24px;
+  border-radius: 12px;
+  max-width: 500px;
+}
+
+.profile-edit-form .form-group {
+  margin-bottom: 20px;
+}
+
+.profile-edit-form label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+.profile-edit-form input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.profile-edit-form input:focus {
+  outline: none;
+  border-color: #4a90e2;
+}
+
+.required {
+  color: #e74c3c;
+}
+
+.form-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 25px;
+}
+
+.save-btn {
+  padding: 10px 24px;
+  background-color: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.save-btn:hover:not(:disabled) {
+  background-color: #219a52;
+}
+
+.save-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.cancel-btn {
+  padding: 10px 24px;
+  background-color: #95a5a6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.cancel-btn:hover {
+  background-color: #7f8c8d;
+}
+
+.error-text {
+  color: #e74c3c;
+  font-size: 0.8rem;
+  margin-top: 5px;
+  display: block;
 }
 
 /* Адаптивность */

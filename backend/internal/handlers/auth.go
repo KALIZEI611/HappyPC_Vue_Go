@@ -32,6 +32,13 @@ type registerRequest struct {
     Password string `json:"password"`
 }
 
+type updateProfileRequest struct {
+    Username        string `json:"username"`
+    Email           string `json:"email"`
+    CurrentPassword string `json:"current_password"`
+    NewPassword     string `json:"new_password"`
+}
+
 func validatePassword(password string) error {
     if len(password) < 8 {
         return fmt.Errorf("пароль должен содержать минимум 8 символов")
@@ -233,5 +240,68 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
         "username":   user.Username,
         "email":      user.Email,
         "created_at": user.CreatedAt.Format(time.RFC3339),
+    })
+}
+
+
+func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
+    user := GetUserFromContext(r.Context())
+    if user == nil {
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
+    
+    var req updateProfileRequest
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        http.Error(w, "Invalid request", http.StatusBadRequest)
+        return
+    }
+    
+    // Проверяем текущий пароль
+    if !utils.CheckPasswordHash(req.CurrentPassword, user.PasswordHash) {
+        http.Error(w, "Current password is incorrect", http.StatusUnauthorized)
+        return
+    }
+    
+    // Обновляем username и email
+    if req.Username != "" {
+        user.Username = req.Username
+    }
+    if req.Email != "" {
+        user.Email = req.Email
+    }
+    
+    // Обновляем пароль, если указан новый
+    if req.NewPassword != "" {
+        if err := validatePassword(req.NewPassword); err != nil {
+            http.Error(w, err.Error(), http.StatusBadRequest)
+            return
+        }
+        hash, err := utils.HashPassword(req.NewPassword)
+        if err != nil {
+            http.Error(w, "Failed to hash password", http.StatusInternalServerError)
+            return
+        }
+        user.PasswordHash = hash
+    }
+    
+    if err := h.userRepo.Update(user); err != nil {
+        if strings.Contains(err.Error(), "duplicate key") {
+            http.Error(w, "User with such email already exists", http.StatusConflict)
+        } else {
+            http.Error(w, "Failed to update profile", http.StatusInternalServerError)
+        }
+        return
+    }
+    
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(map[string]interface{}{
+        "message": "Profile updated successfully",
+        "user": map[string]interface{}{
+            "id":         user.ID,
+            "username":   user.Username,
+            "email":      user.Email,
+            "created_at": user.CreatedAt.Format(time.RFC3339),
+        },
     })
 }
