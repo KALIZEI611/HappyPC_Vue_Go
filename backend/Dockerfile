@@ -2,9 +2,9 @@ FROM golang:latest AS builder
 
 WORKDIR /app
 
-# Копируем go.mod и go.sum с проверкой существования
-COPY go.mod go.sum* ./
-RUN go mod download || true
+# Копируем go.mod и go.sum (они уже в папке backend, так как Root Directory = backend)
+COPY go.mod go.sum ./
+RUN go mod download
 
 # Копируем весь код
 COPY . .
