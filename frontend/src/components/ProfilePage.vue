@@ -360,7 +360,7 @@
 import { ref, reactive, onMounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
-import { user, fetchUser, logout } from "../utils/cache";
+import { user, fetchUser, logout, userCache } from "../utils/cache";
 import { allProductsCache } from "../utils/cache";
 import favoritesService from "../services/favoritesService";
 import cartService from "../services/cartService";
