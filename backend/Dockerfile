@@ -2,10 +2,14 @@ FROM golang:latest AS builder
 
 WORKDIR /app
 
+# Копируем всё содержимое backend
 COPY . .
 
-# Находим main.go и собираем
-RUN go build -o main $(find . -name "main.go" | head -1)
+# Скачиваем зависимости (теперь go.mod есть)
+RUN go mod download
+
+# Собираем бинарник, указывая правильный путь
+RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/server
 
 FROM alpine:latest
 
