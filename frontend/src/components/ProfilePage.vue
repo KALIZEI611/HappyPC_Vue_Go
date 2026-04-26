@@ -419,19 +419,8 @@ const updateProfile = async () => {
   updateError.value = "";
   updateSuccess.value = "";
 
-  // Валидация
   if (!editForm.currentPassword) {
-    updateError.value = "Введите текущий пароль для подтверждения";
-    return;
-  }
-
-  if (editForm.newPassword && editForm.newPassword !== editForm.confirmPassword) {
-    updateError.value = "Новый пароль и подтверждение не совпадают";
-    return;
-  }
-
-  if (editForm.newPassword && editForm.newPassword.length < 6) {
-    updateError.value = "Новый пароль должен содержать минимум 6 символов";
+    updateError.value = "Введите текущий пароль";
     return;
   }
 
@@ -445,18 +434,26 @@ const updateProfile = async () => {
       new_password: editForm.newPassword || undefined,
     });
 
-    // Обновляем данные пользователя в кэше
-    user.value = response.data.user;
-    userCache.set(response.data.user);
+    if (response.data && response.data.user) {
+      user.value = response.data.user;
 
-    updateSuccess.value = "Профиль успешно обновлён!";
+      if (userCache) {
+        userCache.set(response.data.user);
+      }
 
-    setTimeout(() => {
-      updateSuccess.value = "";
-      isEditing.value = false;
-    }, 2000);
+      updateSuccess.value = "Профиль успешно обновлён!";
+
+      setTimeout(() => {
+        updateSuccess.value = "";
+        isEditing.value = false;
+      }, 2000);
+    } else {
+      throw new Error("Неверный формат ответа");
+    }
   } catch (err) {
-    updateError.value = err.response?.data || "Ошибка обновления профиля";
+    console.error("Ошибка:", err);
+    updateError.value =
+      err.response?.data?.message || err.message || "Ошибка обновления профиля";
   } finally {
     updateLoading.value = false;
   }
