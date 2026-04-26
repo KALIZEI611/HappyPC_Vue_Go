@@ -4,8 +4,8 @@ WORKDIR /app
 
 COPY . .
 
-# Сборка сама скачает зависимости
-RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/server
+# Находим main.go и собираем
+RUN go build -o main $(find . -name "main.go" | head -1)
 
 FROM alpine:latest
 
