@@ -5,15 +5,17 @@ import axios from "axios";
 import "./assets/styles.css";
 import { user } from "./utils/cache";
 
-axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'https://happypcvuego-production.up.railway.app';
+// Базовый URL пустой — запросы идут на текущий хост (Nginx),
+// который проксирует их на бэкенд.
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || "";
 axios.defaults.withCredentials = true;
 
-axios.interceptors.request.use(config => {
-    const token = localStorage.getItem('session_token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
+axios.interceptors.request.use((config) => {
+  const token = localStorage.getItem("session_token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 axios.interceptors.response.use(
@@ -34,6 +36,7 @@ axios.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
 const app = createApp(App);
 app.use(router);
 app.mount("#app");

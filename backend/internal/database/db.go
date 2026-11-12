@@ -34,7 +34,7 @@ func ConnectDB() (*gorm.DB, error) {
         log.New(os.Stdout, "\r\n", log.LstdFlags),
         logger.Config{
             SlowThreshold:             200 * time.Millisecond,
-            LogLevel:                  logger.Info,
+            LogLevel:                  logger.Warn,
             IgnoreRecordNotFoundError: true,
             Colorful:                  true,
         },

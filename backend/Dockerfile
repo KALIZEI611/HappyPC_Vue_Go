@@ -1,23 +1,16 @@
-FROM golang:latest AS builder
-
+# --- Этап сборки ---
+FROM golang:1.23-alpine AS builder
 WORKDIR /app
 
-# Копируем go.mod и go.sum из папки backend
-COPY backend/go.mod backend/go.sum ./
+COPY go.mod go.sum ./
 RUN go mod download
 
-# Копируем остальной код из папки backend
-COPY backend/ .
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -o /server ./cmd/server
 
-# Собираем бинарник
-RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/server
-
-FROM alpine:latest
-
-WORKDIR /root/
-
-COPY --from=builder /app/main .
-
+# --- Этап запуска ---
+FROM alpine:3.19
+WORKDIR /app
+COPY --from=builder /server ./server
 EXPOSE 8080
-
-CMD ["./main"]
+CMD ["./server"]

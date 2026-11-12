@@ -1,43 +1,117 @@
 services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: happypc_db
+  # --- Кластер PostgreSQL с Repmgr (3 узла) ---
+  pg-0:
+    image: soldevelo/postgresql-repmgr:15
+    container_name: happypc_db_0
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: happypc
-    ports:
-      - "5433:5432"
+      - POSTGRESQL_POSTGRES_PASSWORD=postgres
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=postgres
+      - POSTGRESQL_DATABASE=happypc
+      - REPMGR_PASSWORD=repmgrpass
+      - REPMGR_PRIMARY_HOST=pg-0
+      - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
+      - REPMGR_NODE_NAME=pg-0
+      - REPMGR_NODE_NETWORK_NAME=pg-0
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - pg0_data:/bitnami/postgresql
     networks:
       - happypc_network
-    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "happypc"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  pg-1:
+    image: soldevelo/postgresql-repmgr:15
+    container_name: happypc_db_1
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=postgres
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=postgres
+      - POSTGRESQL_DATABASE=happypc
+      - REPMGR_PASSWORD=repmgrpass
+      - REPMGR_PRIMARY_HOST=pg-0
+      - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
+      - REPMGR_NODE_NAME=pg-1
+      - REPMGR_NODE_NETWORK_NAME=pg-1
+    volumes:
+      - pg1_data:/bitnami/postgresql
+    networks:
+      - happypc_network
+    depends_on:
+      - pg-0
+
+  pg-2:
+    image: soldevelo/postgresql-repmgr:15
+    container_name: happypc_db_2
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=postgres
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=postgres
+      - POSTGRESQL_DATABASE=happypc
+      - REPMGR_PASSWORD=repmgrpass
+      - REPMGR_PRIMARY_HOST=pg-0
+      - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
+      - REPMGR_NODE_NAME=pg-2
+      - REPMGR_NODE_NETWORK_NAME=pg-2
+    volumes:
+      - pg2_data:/bitnami/postgresql
+    networks:
+      - happypc_network
+    depends_on:
+      - pg-0
+
+  # --- Pgpool-II: единая точка входа, сам находит лидера ---
+  pgpool:
+    image: soldevelo/pgpool:4
+    container_name: happypc_pgpool
+    ports:
+      - "5433:5432" # Пробрасываем на 5433, чтобы не конфликтовать с возможным локальным Postgres
+    environment:
+      - PGPOOL_BACKEND_NODES=0:pg-0:5432,1:pg-1:5432,2:pg-2:5432
+      - PGPOOL_SR_CHECK_USER=repmgr
+      - PGPOOL_SR_CHECK_PASSWORD=repmgrpass
+      - PGPOOL_ENABLE_LDAP=no
+      - PGPOOL_POSTGRES_USERNAME=postgres
+      - PGPOOL_POSTGRES_PASSWORD=postgres
+      - PGPOOL_ADMIN_USERNAME=admin
+      - PGPOOL_ADMIN_PASSWORD=adminpassword
+      - PGPOOL_ENABLE_LOAD_BALANCING=yes
+    networks:
+      - happypc_network
+    depends_on:
+      - pg-0
+      - pg-1
+      - pg-2
+    healthcheck:
+      test: ["CMD", "/opt/bitnami/scripts/pgpool/healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- Ваш бэкенд (изменён только DB_HOST и depends_on) ---
   backend:
     build: ./backend
     container_name: happypc_backend
     ports:
       - "8080:8080"
     environment:
-      DB_HOST: postgres
+      DB_HOST: pgpool # <-- Теперь бэкенд подключается к Pgpool, а не к конкретному узлу
       DB_PORT: 5432
       DB_USER: postgres
       DB_PASSWORD: postgres
       DB_NAME: happypc
       SERVER_PORT: 8080
     depends_on:
-      postgres:
+      pgpool:
         condition: service_healthy
     networks:
       - happypc_network
     restart: unless-stopped
 
+  # --- Фронтенд (без изменений) ---
   frontend:
     build: ./frontend
     container_name: frontend
@@ -50,7 +124,9 @@ services:
     restart: unless-stopped
 
 volumes:
-  postgres_data:
+  pg0_data:
+  pg1_data:
+  pg2_data:
 
 networks:
   happypc_network:

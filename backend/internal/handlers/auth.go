@@ -111,7 +111,6 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Failed to create session", http.StatusInternalServerError)
         return
     }
-    h.sessionRepo.Create(session)
     
 
     http.SetCookie(w, &http.Cookie{
@@ -166,7 +165,6 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Failed to create session", http.StatusInternalServerError)
         return
     }
-    h.sessionRepo.Create(session)
 
     http.SetCookie(w, &http.Cookie{
         Name:     "session_token",
